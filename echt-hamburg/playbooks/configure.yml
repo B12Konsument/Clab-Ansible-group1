@@ -1,0 +1,32 @@
+---
+- name: Router der Franchise-Filiale konfigurieren
+  hosts: routers
+  gather_facts: false
+  connection: ansible.netcommon.network_cli
+  collections:
+    - cisco.ios
+  vars:
+    ansible_network_os: cisco.ios.ios
+    ansible_user: admin
+    ansible_password: admin
+  tasks:
+    - name: R1-Konfiguration bereitstellen
+      cisco.ios.ios_config:
+        src: templates/router.j2
+        save_when: modified
+
+- name: Switch der Franchise-Filiale konfigurieren
+  hosts: switches
+  gather_facts: false
+  connection: ansible.netcommon.network_cli
+  collections:
+    - cisco.ios
+  vars:
+    ansible_network_os: cisco.ios.ios
+    ansible_user: admin
+    ansible_password: admin
+  tasks:
+    - name: S1-Konfiguration bereitstellen
+      cisco.ios.ios_config:
+        src: templates/switch.j2
+        save_when: modified

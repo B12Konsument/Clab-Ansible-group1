@@ -1,0 +1,3 @@
+# Von Containerlab erzeugte Laufzeitdaten
+clab-*/
+*.annotations.json

@@ -1,0 +1,4 @@
+# Große Cisco-/Containerlab-Images werden nicht mit Git versioniert.
+# Die zugehörigen YAML-Konfigurationen bleiben im Repository.
+Cisco-CML-Images/**/*.tar
+Cisco-CML-Images/**/*.iol

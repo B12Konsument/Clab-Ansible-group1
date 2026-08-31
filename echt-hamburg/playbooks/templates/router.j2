@@ -1,0 +1,76 @@
+hostname R1-{{ franchise_name | upper | replace(' ', '-') }}
+no ip domain lookup
+no service password-encryption
+service timestamps log datetime msec
+enable password {{ enable_password }}
+username netadmin privilege 15 password admin
+ip domain name echt-hamburg.de
+ip ssh version 2
+banner motd ^C
+*** {{ franchise_name }} | {{ group_name }} ***
+Unbefugter Zugriff ist verboten.
+^C
+!
+ip dhcp excluded-address 192.168.108.1
+ip dhcp excluded-address 192.168.108.65
+ip dhcp excluded-address 192.168.108.129
+ip dhcp excluded-address 192.168.108.193
+!
+ip dhcp pool CUSTOMER-SUPPORT
+ network 192.168.108.0 255.255.255.192
+ default-router 192.168.108.1
+ domain-name echt-hamburg.de
+!
+ip dhcp pool IT
+ network 192.168.108.64 255.255.255.192
+ default-router 192.168.108.65
+ domain-name echt-hamburg.de
+!
+ip dhcp pool WEBSERVER
+ network 192.168.108.128 255.255.255.192
+ default-router 192.168.108.129
+ domain-name echt-hamburg.de
+!
+ip dhcp pool MANAGEMENT
+ network 192.168.108.192 255.255.255.192
+ default-router 192.168.108.193
+ domain-name echt-hamburg.de
+!
+access-list 1 permit 192.168.108.0 0.0.0.255
+ip nat inside source list 1 interface Ethernet0/2 overload
+ip route 0.0.0.0 0.0.0.0 200.108.1.2
+!
+interface Ethernet0/1
+ description 802.1Q-Trunk-zu-S1
+ no ip address
+ no shutdown
+!
+interface Ethernet0/1.10
+ encapsulation dot1Q 10
+ ip address 192.168.108.1 255.255.255.192
+ ip nat inside
+!
+interface Ethernet0/1.20
+ encapsulation dot1Q 20
+ ip address 192.168.108.65 255.255.255.192
+ ip nat inside
+!
+interface Ethernet0/1.30
+ encapsulation dot1Q 30
+ ip address 192.168.108.129 255.255.255.192
+ ip nat inside
+!
+interface Ethernet0/1.99
+ encapsulation dot1Q 99
+ ip address 192.168.108.193 255.255.255.192
+ ip nat inside
+!
+interface Ethernet0/2
+ description Internet-Uplink
+ ip address 200.108.1.1 255.255.255.240
+ ip nat outside
+ no shutdown
+!
+line vty 0 4
+ login local
+ transport input ssh

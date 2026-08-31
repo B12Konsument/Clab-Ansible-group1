@@ -1,0 +1,73 @@
+hostname S1-{{ franchise_name | upper | replace(' ', '-') }}
+no ip domain lookup
+no service password-encryption
+enable password {{ enable_password }}
+username netadmin privilege 15 password admin
+ip domain name echt-hamburg.de
+ip ssh version 2
+banner motd ^C
+*** {{ franchise_name }} | {{ group_name }} ***
+Unbefugter Zugriff ist verboten.
+^C
+!
+vtp mode transparent
+!
+vlan 10
+ name CUSTOMER_SUPPORT
+vlan 20
+ name IT
+vlan 30
+ name WEBSERVER
+vlan 99
+ name MANAGEMENT
+!
+interface Ethernet0/1
+ description 802.1Q-Trunk-zu-R1
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk native vlan 1
+ switchport trunk allowed vlan 10,20,30,99
+ no shutdown
+!
+interface Ethernet0/2
+ description Customer-Support-Client
+ switchport mode access
+ switchport access vlan 10
+ spanning-tree portfast
+ no shutdown
+!
+interface Ethernet0/3
+ description IT-Client
+ switchport mode access
+ switchport access vlan 20
+ spanning-tree portfast
+ no shutdown
+!
+interface Ethernet1/0
+ description Webserver
+ switchport mode access
+ switchport access vlan 30
+ spanning-tree portfast
+ no shutdown
+!
+interface Ethernet1/1
+ description Management-Client
+ switchport mode access
+ switchport access vlan 99
+ spanning-tree portfast
+ no shutdown
+!
+interface range Ethernet1/2 - 3
+ description UNGENUTZT
+ shutdown
+!
+interface Vlan99
+ description Management-SVI
+ ip address 192.168.108.194 255.255.255.192
+ no shutdown
+!
+ip default-gateway 192.168.108.193
+!
+line vty 0 4
+ login local
+ transport input ssh

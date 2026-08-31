@@ -1,0 +1,16 @@
+# topology documentation: http://containerlab.dev/lab-examples/srl-ceos/
+name: cisco-router
+
+topology:
+  nodes:
+    R1:
+      kind: Cisco_iol
+      image: cl-cisco-router:latest
+    R2:
+      kind: Cisco_iol
+      image: cl-cisco-router:latest
+
+
+
+  links:
+    - endpoints: ["R1:e0/1", "R2:e0/1"]

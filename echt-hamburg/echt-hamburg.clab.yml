@@ -1,0 +1,63 @@
+name: echt-hamburg
+
+topology:
+  nodes:
+    r1:
+      kind: cisco_iol
+      image: cl-cisco-router:arm64
+      labels:
+        ansible-group: routers
+      startup-config: configs/r1.partial.cfg
+      exec:
+        - ethtool -K eth1 rx-vlan-offload off tx-vlan-offload off
+
+    s1:
+      kind: cisco_iol
+      type: L2
+      image: containerlab-cisco-switch:arm64
+      labels:
+        ansible-group: switches
+      startup-config: configs/s1.partial.cfg
+      exec:
+        - ethtool -K eth1 rx-vlan-offload off tx-vlan-offload off
+
+    support-client:
+      kind: linux
+      image: alpine:3.20
+      labels:
+        ansible-group: clients
+
+    it-client:
+      kind: linux
+      image: alpine:3.20
+      labels:
+        ansible-group: clients
+
+    webserver:
+      kind: linux
+      image: nginx:alpine
+      binds:
+        - ./website:/usr/share/nginx/html:ro
+      labels:
+        ansible-group: servers
+
+    management-client:
+      kind: linux
+      image: alpine:3.20
+      labels:
+        ansible-group: clients
+
+    internet:
+      kind: linux
+      image: alpine:3.20
+      exec:
+        - ip addr add 200.108.1.2/28 dev eth1
+        - ip link set eth1 up
+
+  links:
+    - endpoints: ["r1:Ethernet0/1", "s1:Ethernet0/1"]
+    - endpoints: ["r1:Ethernet0/2", "internet:eth1"]
+    - endpoints: ["s1:Ethernet0/2", "support-client:eth1"]
+    - endpoints: ["s1:Ethernet0/3", "it-client:eth1"]
+    - endpoints: ["s1:Ethernet1/0", "webserver:eth1"]
+    - endpoints: ["s1:Ethernet1/1", "management-client:eth1"]

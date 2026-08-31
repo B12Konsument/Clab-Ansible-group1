@@ -1,0 +1,12 @@
+#
+# ioll2-xe image definition
+# generated 2024-09-18
+# part of VIRL^2
+#
+id: ioll2-xe-17-15-01
+label: IOL L2 XE 17.15.01
+description: IOL L2 XE 17.15.01
+node_definition_id: ioll2-xe
+disk_image: x86_64_crb_linux_l2-adventerprisek9-ms.iol
+read_only: true
+schema_version: 0.0.1

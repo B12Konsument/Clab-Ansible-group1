@@ -1,0 +1,45 @@
+# Linux - Switch - Router
+name: LSR
+
+topology:
+  nodes:
+    L1:
+      kind: cumulus_cvx
+      image: networkop/cx:4.3.0
+    L2:
+      kind: cumulus_cvx
+      image: networkop/cx:4.3.0
+    L3:
+      kind: cumulus_cvx
+      image: networkop/cx:4.3.0
+    S1:
+      kind: Cisco_iol
+      image: vrnetlab/cisco_iol:s.w.t
+    S2:
+      kind: Cisco_iol
+      image: vrnetlab/cisco_iol:s.w.t
+    S3:
+      kind: Cisco_iol
+      image: vrnetlab/cisco_iol:s.w.t
+    R1:
+      kind: Cisco_iol
+      image: vrnetlab/cisco_iol:x.y.z
+    R2:
+      kind: Cisco_iol
+      image: vrnetlab/cisco_iol:x.y.z
+    R3:
+      kind: Cisco_iol
+      image: vrnetlab/cisco_iol:x.y.z
+
+  links:
+    - endpoints: ["L1:swp12", "S1:e0/2"] 
+    - endpoints: ["L2:swp12", "S2:e0/2"] 
+    - endpoints: ["L3:swp12", "S3:e0/2"]
+
+    - endpoints: ["S1:e0/1", "R1:e0/1"]
+    - endpoints: ["S2:e0/1", "R2:e0/1"]
+    - endpoints: ["S3:e0/1", "R3:e0/1"]
+
+    - endpoints: ["R2:e0/2", "R3:e0/2"]
+    - endpoints: ["R1:e0/3", "R2:e0/3"]
+

@@ -1,0 +1,37 @@
+Erschaffen Sie ein skalierbares Netzwerk auf Knopfdruck!
+Die Echt Hamburg GmbH ist auf hamburgische Produkte und Events für die Zielgruppe der 18- bis 30-Jährigen spezialisiert. Ziel ist es, sowohl Einheimische als auch Touristinnen und Touristen miteinander zu vernetzen. Neben dem Erwerb trendiger, regionaler Produkte sollen exklusive Veranstaltungen in Hamburg gebucht werden können.
+
+Das bestehende Konzept soll künftig als Franchise-Modell auch in anderen Städten angeboten werden. Bereits jetzt konnten zahlreiche interessierte Franchise-Nehmerinnen und -Nehmer gewonnen werden.
+
+Sie sind Teil des IT-Teams der Echt Hamburg GmbH. Ihre Aufgabe besteht darin, die Netzwerk-Hardware aller Franchise-Standorte remote zu konfigurieren.
+
+An jedem Standort wurden bereits ein Switch, ein Router und ein Webserver ausgeliefert und installiert.
+
+Der Router wird mit dem Internet verbunden und erhält eine öffentliche IP-Adresse (200.108.1.1/28).
+Das Firmennetzwerk eines Franchise-Nehmers wird dynamisch mit privaten IP-Adressen (192.168.108.0/24) ausgestattet und in vier VLANs unterteilt:
+VLAN 10: Customer Support
+VLAN 20: IT
+VLAN 30: Webserver
+VLAN 99: Management
+Dem Router wird jeweils die erste verfügbare IPv4-Adresse statisch zugewiesen.
+Der Management Zugang zum Router und Switch erfolgt über VLAN99 über SSH.
+Auch Sicherheitsgründen soll eine NAT-Konfiguration auf dem Router vorgenommen werden.
+Die Domäne ist echt-hamburg.de
+
+Der Auftrag:
+Bitte nutzen Sie Ansible, um exemplarisch für eine Niederlassung alle Geräte entsprechend der technischen Anforderungen zu konfigurieren.
+Zur Demonstration können Sie entweder echte Hardware oder die virtuelle Umgebung Cisco Modeling Labs verwenden.
+Da Router und Switches pro Klasse nur begrenzt zur Verfügung stehen, stimmen Sie bitte die Nutzung dieser Ressourcen im Voraus mit dem Lehrerteam ab.
+
+Die technischen Anforderungen:
+Must-Kriterien:
+4 VLANs mit dynamischer IP Konfiguration in jedem VLAN (DHCP Server auf dem Router).
+Inter-VLAN-Routing (Abteilungen sollen miteinander kommunizieren können).
+Banner MOTD (inklusive Name des Franchise-Nehmers/Gruppenbezeichnung)
+Passwörter (unverschlüsselt)
+Alle ungenutzten Ports des Switches sollen deaktiviert werden.
+Should-Kriterien:
+Die internen IP-Adressen sollen im Internet nicht sichtbar sein. Dazu soll auf dem Router NAT aktiviert werden.
+Website mit einer kleine Präsentation der Filiale (Gruppenname, Mitglieder etc.)
+Could-Kriterien:
+Konzept, wie Monitoring des Webservers oder der anderen Netzwerkgeräte erreicht werden kann.
