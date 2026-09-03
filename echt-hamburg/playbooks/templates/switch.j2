@@ -63,10 +63,10 @@ interface range Ethernet1/2 - 3
 !
 interface Vlan99
  description Management-SVI
- ip address 192.168.108.194 255.255.255.192
+ ip address 192.168.99.2 255.255.255.0
  no shutdown
 !
-ip default-gateway 192.168.108.193
+ip default-gateway 192.168.99.1
 !
 line vty 0 4
  login local

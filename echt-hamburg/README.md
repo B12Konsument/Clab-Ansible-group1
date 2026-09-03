@@ -8,10 +8,13 @@ Switch.
 
 | VLAN | Bereich | Netz | Gateway |
 | --- | --- | --- | --- |
-| 10 | Customer Support | 192.168.108.0/26 | 192.168.108.1 |
-| 20 | IT | 192.168.108.64/26 | 192.168.108.65 |
-| 30 | Webserver | 192.168.108.128/26 | 192.168.108.129 |
-| 99 | Management | 192.168.108.192/26 | 192.168.108.193 |
+| 10 | Customer Support | 192.168.10.0/24 | 192.168.10.1 |
+| 20 | IT | 192.168.20.0/24 | 192.168.20.1 |
+| 30 | Webserver | 192.168.30.0/24 | 192.168.30.1 |
+| 99 | Management | 192.168.99.0/24 | 192.168.99.1 |
+
+Der Switch verwendet im Management-VLAN die statische Adresse
+`192.168.99.2/24`.
 
 Der Router nutzt am simulierten Internet-Uplink `200.108.1.1/28`. NAT/PAT
 verbirgt die privaten Adressen. Je ein Testgerät prüft DHCP in den vier VLANs.
