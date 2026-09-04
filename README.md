@@ -16,3 +16,20 @@ kopiert werden:
 Die Dateinamen müssen genau den oben angegebenen Namen entsprechen. Die
 jeweiligen YAML-Dateien im Repository enthalten die zugehörigen Image-
 Konfigurationen.
+
+## Images für Echt Hamburg einrichten
+
+Nach dem Git-Clone den Ordner `Cisco-CML-Images` in diesen Ordner legen,
+also neben `echt-hamburg`. Danach werden die für das Lab benötigten
+Container-Images einmalig importiert:
+
+```bash
+./setup-echt-hamburg-images.sh
+```
+
+Das Skript importiert
+`Cisco-CML-Images/CL-Images/Router/CL-Cisco-Router.tar` und
+`Cisco-CML-Images/CL-Images/Switch/containerlab-cisco-switch.tar` in Docker.
+Danach stehen `cl-cisco-router:arm64` und
+`containerlab-cisco-switch:arm64` für das Projekt `echt-hamburg` bereit.
+Die großen Archive bleiben lokal und werden nicht mit Git versioniert.

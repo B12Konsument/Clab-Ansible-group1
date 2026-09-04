@@ -21,12 +21,8 @@ verbirgt die privaten Adressen. Je ein Testgerät prüft DHCP in den vier VLANs.
 
 ## Voraussetzungen
 
-Benötigt werden Docker, Containerlab, Ansible und diese lokalen Cisco-Images:
-
-```bash
-docker image inspect cl-cisco-router:arm64
-docker image inspect containerlab-cisco-switch:arm64
-```
+Benötigt werden Docker, Containerlab und Ansible. Die einmalige Einrichtung
+der lokalen Cisco-Images ist in der übergeordneten README beschrieben.
 
 Die Ansible-Collections werden einmalig installiert:
 
