@@ -60,7 +60,7 @@ if (( ${#conflicts[@]} )); then
 fi
 
 echo "Installiere Basiswerkzeuge und Ansible ..."
-dnf install -y dnf5-plugins ca-certificates git jq tar \
+dnf install -y dnf5-plugins ca-certificates git jq tar unzip \
   openssh-clients iproute iputils ethtool iptables-nft \
   ansible-core python3-ansible-pylibssh
 if ! command -v curl >/dev/null 2>&1; then

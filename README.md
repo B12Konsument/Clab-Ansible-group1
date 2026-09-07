@@ -21,7 +21,7 @@ Installiert werden:
 | Containerlab | Router, Switch und Testgeräte bereitstellen |
 | Ansible Core und python3-ansible-pylibssh | Cisco-Geräte über SSH konfigurieren |
 | Collections aus `echt-hamburg/requirements.yml` | `ansible.netcommon`, `cisco.ios` und deren Abhängigkeiten |
-| Git, curl, CA-Zertifikate, jq und tar | Downloads, Repository und Image-Import |
+| Git, curl, CA-Zertifikate, jq, tar und unzip | Downloads, Repository und Image-Import |
 | SSH-Client, iproute, iputils, ethtool und iptables-nft | Zugriff und Netzwerkwerkzeuge |
 
 Docker wird gestartet und für den Systemstart aktiviert. Dein Benutzer wird
@@ -68,17 +68,19 @@ Konfigurationen.
 
 ## Images für Echt Hamburg einrichten
 
-Nach dem Git-Clone den Ordner `Cisco-CML-Images` in diesen Ordner legen,
-also neben `echt-hamburg`. Danach werden die für das Lab benötigten
-Container-Images einmalig importiert:
+Nach dem Git-Clone `Cisco-CML-Images.zip` in diesen Ordner legen, also neben
+`echt-hamburg`. Danach werden die für das Lab benötigten Container-Images
+einmalig importiert:
 
 ```bash
 ./setup-echt-hamburg-images.sh
 ```
 
-Das Skript importiert
+Das Skript entpackt die ZIP-Datei nur temporär und importiert
 `Cisco-CML-Images/CL-Images/Router/CL-Cisco-Router.tar` und
 `Cisco-CML-Images/CL-Images/Switch/containerlab-cisco-switch.tar` in Docker.
 Danach stehen `cl-cisco-router:arm64` und
 `containerlab-cisco-switch:arm64` für das Projekt `echt-hamburg` bereit.
-Die großen Archive bleiben lokal und werden nicht mit Git versioniert.
+Die ZIP-Datei und die großen Archive bleiben lokal und werden nicht mit Git
+versioniert. Ein bereits entpackter Ordner `Cisco-CML-Images` wird ebenfalls
+weiterhin unterstützt.
