@@ -27,6 +27,10 @@ der lokalen Cisco-Images ist in der übergeordneten README beschrieben.
 Für Fedora 44 installiert `../setup-fedora-44.sh` alle Host-Werkzeuge und die
 Ansible-Collections. Anleitung: [Fedora 44 einrichten](../README.md#fedora-44-einrichten).
 
+Auf Intel-/AMD-Rechnern `../setup-fedora-44-x86_64.sh` und anschließend
+`../setup-echt-hamburg-images-x86_64.sh` verwenden. Diese Varianten stellen die
+Cisco-Images in der Topologie auf `:latest` um und prüfen beim Import auf AMD64.
+
 Die Ansible-Collections werden einmalig installiert:
 
 ```bash

@@ -5,6 +5,7 @@ set -Eeuo pipefail
 trap 'printf "Fehler in Zeile %s. Installation abgebrochen.\n" "$LINENO" >&2' ERR
 
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+x86_64_mode=false
 
 if [[ "${1:-}" == "--help" ]]; then
   echo "Aufruf: ./setup-fedora-44.sh"
@@ -12,7 +13,9 @@ if [[ "${1:-}" == "--help" ]]; then
   echo "Benoetigt Internet und sudo; Cisco-Images werden separat importiert."
   exit 0
 fi
-if (( $# > 0 )); then
+if [[ "${1:-}" == "--x86_64" && $# == 1 ]]; then
+  x86_64_mode=true
+elif (( $# > 0 )); then
   echo "Unbekannte Argumente. Hilfe: $0 --help" >&2
   exit 1
 fi
@@ -33,13 +36,17 @@ case "$(uname -m)" in
   x86_64) clab_arch=amd64 ;;
   *) echo "Nicht unterstuetzte Architektur: $(uname -m)" >&2; exit 1 ;;
 esac
+if "$x86_64_mode" && [[ "$clab_arch" != "amd64" ]]; then
+  echo "Die x86_64-Variante benoetigt einen Intel-/AMD-Linux-Host (x86_64)." >&2
+  exit 1
+fi
 [[ -f "$script_dir/echt-hamburg/requirements.yml" ]] || {
   echo "Das Skript muss neben dem Ordner echt-hamburg liegen." >&2
   exit 1
 }
 
 if (( EUID != 0 )); then
-  exec sudo -- bash "$script_dir/setup-fedora-44.sh"
+  exec sudo -- bash "$script_dir/setup-fedora-44.sh" "$@"
 fi
 target_user="${SUDO_USER:-root}"
 
@@ -108,16 +115,22 @@ containerlab version
 /usr/bin/python3 -c 'import pylibsshext; print("Ansible-SSH-Bibliothek vorhanden")'
 sudo -H -u "$target_user" /usr/bin/ansible-galaxy collection list
 
+image_setup=setup-echt-hamburg-images.sh
+if "$x86_64_mode"; then
+  image_setup=setup-echt-hamburg-images-x86_64.sh
+  sudo -H -u "$target_user" bash "$script_dir/$image_setup" --configure-only
+fi
+
 echo
 echo "Host-Werkzeuge installiert."
 echo "Einmal vollstaendig ab- und wieder anmelden (auch die IDE neu starten)."
 echo "Die Gruppen docker und clab_admins ermoeglichen administrativen Host-Zugriff."
-if [[ "$clab_arch" == "amd64" ]]; then
-  echo "ACHTUNG: Die Lab-Topologie nutzt ARM64-Cisco-Images. Fuer diesen Host"
-  echo "passende AMD64-Images beschaffen und Image-Namen in Topologie/Import anpassen."
+if [[ "$clab_arch" == "amd64" ]] && ! "$x86_64_mode"; then
+  echo "Fuer AMD64-Images mit :latest und die passende Topologie anschliessend"
+  echo "./setup-echt-hamburg-images-x86_64.sh ausfuehren."
 fi
 echo "Danach Cisco-Archive laut README bereitstellen und im Projektordner ausfuehren:"
-echo "  ./setup-echt-hamburg-images.sh"
+echo "  ./$image_setup"
 echo "  cd echt-hamburg"
 echo "  containerlab deploy -t echt-hamburg.clab.yml"
 echo '  ansible-playbook -i clab-echt-hamburg/ansible-inventory.yml -e @playbooks/group_vars.yml playbooks/configure.yml'

@@ -5,7 +5,11 @@
 Im geklonten Projektordner ausführen:
 
 ```bash
+# Bisherige Einrichtung (zum Beispiel auf Fedora Asahi Remix):
 ./setup-fedora-44.sh
+
+# Auf Intel-/AMD-Rechnern stattdessen:
+./setup-fedora-44-x86_64.sh
 ```
 
 Das Skript benötigt Internet und fragt bei Bedarf nach dem sudo-Passwort.
@@ -36,10 +40,10 @@ einer Paketliste ab, damit diese gezielt geprüft werden können. Zum Abschluss
 prüft es Docker mit `hello-world` sowie die installierten Werkzeuge. Es startet
 das eigentliche Lab noch nicht.
 
-**Cisco-Images separat bereitstellen:** Die aktuelle Topologie und das
-Importskript verwenden `cl-cisco-router:arm64` und
-`containerlab-cisco-switch:arm64`. Auf Intel-/AMD-Rechnern sind passende
-AMD64-Images und entsprechende Image-Namen in beiden Dateien nötig. Die
+**Cisco-Images separat bereitstellen:** Die ursprüngliche Topologie und das
+Importskript verwenden die Tags `cl-cisco-router:arm64` und
+`containerlab-cisco-switch:arm64`. Die x86_64-Varianten stellen die beiden
+Cisco-Einträge in `echt-hamburg/echt-hamburg.clab.yml` auf `:latest` um. Die
 Installation der Host-Werkzeuge allein bestätigt nicht die Funktion der
 Cisco-Images oder des VLAN-Datenverkehrs. Alpine und Nginx lädt Containerlab
 beim ersten Deploy automatisch; DHCP-Client und Webserver laufen in den Containern.
@@ -84,3 +88,37 @@ Danach stehen `cl-cisco-router:arm64` und
 Die ZIP-Datei und die großen Archive bleiben lokal und werden nicht mit Git
 versioniert. Ein bereits entpackter Ordner `Cisco-CML-Images` wird ebenfalls
 weiterhin unterstützt.
+
+## Einrichtung auf x86_64 (Intel/AMD)
+
+```bash
+./setup-fedora-44-x86_64.sh
+# Danach vollständig ab- und wieder anmelden.
+# Cisco-CML-Images.zip oder den entpackten Ordner wie oben bereitstellen.
+./setup-echt-hamburg-images-x86_64.sh
+cd echt-hamburg
+containerlab deploy -t echt-hamburg.clab.yml
+ansible-playbook -i clab-echt-hamburg/ansible-inventory.yml \
+  -e @playbooks/group_vars.yml playbooks/configure.yml
+./scripts/request-dhcp.sh
+```
+
+Das Fedora-Skript verwendet die gemeinsame Paketinstallation und passt danach
+die Topologie an. Der x86_64-Image-Import prüft den Docker-Daemon und die Images
+auf AMD64, setzt `cl-cisco-router:latest` und
+`containerlab-cisco-switch:latest` und passt nach erfolgreichem Import ebenfalls
+die Topologie an. Bereits vorhandene Ziel-Images werden geprüft und wiederverwendet.
+Die Archivnamen und Ordner bleiben gleich; ZIP-Dateien haben Vorrang vor dem
+entpackten Ordner. Beide neuen Skripte unterstützen `--help`.
+
+Die hier geprüften lokalen TAR-Archive enthalten bereits `linux/amd64`:
+der Router ohne gespeicherten Tag, der Switch mit `containerlab-cisco-switch:v1`.
+Deshalb vergibt das Importskript die gewünschten `:latest`-Tags ausdrücklich.
+Ein Tag wie `:arm64`, `:aarch64` oder `:latest` bestimmt **nicht** die tatsächliche
+Image-Architektur; andere Archive werden beim Import erneut geprüft.
+
+Die Umstellung erfolgt beim Ausführen der neuen Skripte. Sie ändert nur die
+beiden Cisco-Image-Einträge in der Quelltopologie. Ein bereits laufendes Lab
+übernimmt die neuen Images erst nach `containerlab redeploy -t echt-hamburg.clab.yml`
+(dabei wird es neu erstellt). Die bisherigen Skripte stellen eine bereits
+geänderte Topologie nicht automatisch auf `:arm64` zurück.
