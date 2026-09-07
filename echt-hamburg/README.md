@@ -24,6 +24,9 @@ verbirgt die privaten Adressen. Je ein Testgerät prüft DHCP in den vier VLANs.
 Benötigt werden Docker, Containerlab und Ansible. Die einmalige Einrichtung
 der lokalen Cisco-Images ist in der übergeordneten README beschrieben.
 
+Für Fedora 44 installiert `../setup-fedora-44.sh` alle Host-Werkzeuge und die
+Ansible-Collections. Anleitung: [Fedora 44 einrichten](../README.md#fedora-44-einrichten).
+
 Die Ansible-Collections werden einmalig installiert:
 
 ```bash

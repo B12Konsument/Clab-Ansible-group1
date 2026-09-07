@@ -1,5 +1,54 @@
 # Clab-Ansible-group1
 
+## Fedora 44 einrichten
+
+Im geklonten Projektordner ausführen:
+
+```bash
+./setup-fedora-44.sh
+```
+
+Das Skript benötigt Internet und fragt bei Bedarf nach dem sudo-Passwort.
+Es unterstützt Fedora 44 Workstation/Server und Fedora Asahi Remix 44 auf
+ARM64 sowie x86_64; Fedora Atomic wird nicht unterstützt.
+
+Installiert werden:
+
+| Bestandteil | Zweck |
+| --- | --- |
+| Docker CE, CLI und containerd.io | Container-Laufzeit für das Lab |
+| Docker Buildx und Compose | Ergänzende Werkzeuge der Docker-Installation |
+| Containerlab | Router, Switch und Testgeräte bereitstellen |
+| Ansible Core und python3-ansible-pylibssh | Cisco-Geräte über SSH konfigurieren |
+| Collections aus `echt-hamburg/requirements.yml` | `ansible.netcommon`, `cisco.ios` und deren Abhängigkeiten |
+| Git, curl, CA-Zertifikate, jq und tar | Downloads, Repository und Image-Import |
+| SSH-Client, iproute, iputils, ethtool und iptables-nft | Zugriff und Netzwerkwerkzeuge |
+
+Docker wird gestartet und für den Systemstart aktiviert. Dein Benutzer wird
+den Gruppen `docker` und `clab_admins` hinzugefügt; diese erlauben administrativen
+Zugriff auf den Host. **Danach vollständig ab- und wieder anmelden und die IDE
+neu starten.** Ansible-Collections werden für den aufrufenden Benutzer installiert;
+das Skript daher aus deinem normalen Benutzerkonto starten.
+
+Das Skript kann erneut ausgeführt werden. Ein vorhandenes Containerlab bleibt
+erhalten. Bei konfliktträchtigen alten Docker-/Container-Paketen bricht es mit
+einer Paketliste ab, damit diese gezielt geprüft werden können. Zum Abschluss
+prüft es Docker mit `hello-world` sowie die installierten Werkzeuge. Es startet
+das eigentliche Lab noch nicht.
+
+**Cisco-Images separat bereitstellen:** Die aktuelle Topologie und das
+Importskript verwenden `cl-cisco-router:arm64` und
+`containerlab-cisco-switch:arm64`. Auf Intel-/AMD-Rechnern sind passende
+AMD64-Images und entsprechende Image-Namen in beiden Dateien nötig. Die
+Installation der Host-Werkzeuge allein bestätigt nicht die Funktion der
+Cisco-Images oder des VLAN-Datenverkehrs. Alpine und Nginx lädt Containerlab
+beim ersten Deploy automatisch; DHCP-Client und Webserver laufen in den Containern.
+
+Installationsquellen: [Docker CE für Fedora](https://docs.docker.com/engine/install/fedora/),
+[Containerlab](https://containerlab.dev/install/),
+[Ansible Core für Fedora](https://packages.fedoraproject.org/pkgs/ansible-core/ansible-core/)
+und [Ansible SSH-Bibliothek für Fedora](https://packages.fedoraproject.org/pkgs/python-ansible-pylibssh/python3-ansible-pylibssh/).
+
 ## Cisco-Images
 
 Die großen Cisco-Images werden aus Platzgründen nicht im Git-Repository
