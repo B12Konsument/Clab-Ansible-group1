@@ -46,12 +46,29 @@ ansible-playbook -i clab-echt-hamburg/ansible-inventory.yml \
 ./scripts/request-dhcp.sh
 ```
 
-Danach besitzen alle vier Testgeräte eine DHCP-Adresse. Die Adresse des
+Ansible und das DHCP-Skript sind zwei getrennte Befehle. Der Backslash muss
+bei einem mehrzeiligen Befehl das letzte Zeichen der Zeile sein.
+
+Das DHCP-Skript sendet je Gerät bis zu 15 Anfragen im Abstand von drei
+Sekunden, damit das Netz nach der Konfiguration Zeit zum Bereitwerden hat.
+Es prüft alle vier Geräte auch dann, wenn eines fehlschlägt, und beendet sich
+bei mindestens einem Fehler mit Exit-Code 1.
+
+Nach erfolgreichem Durchlauf besitzen alle vier Testgeräte eine DHCP-Adresse. Die Adresse des
 Webservers lässt sich so anzeigen:
 
 ```bash
 docker exec clab-echt-hamburg-webserver ip -4 addr show eth1
 ```
+
+Bei `udhcpc: no lease, failing` hat der Client keine DHCP-Zuweisung erhalten.
+Ein erfolgreiches Ansible-Playbook bestätigt nur die Konfiguration, nicht
+die Erreichbarkeit des DHCP-Servers. Das Skript kann erneut gestartet werden.
+Bleibt der Fehler bestehen, auf S1 `show interfaces trunk` und
+`show spanning-tree vlan 10` prüfen; VLAN 10 muss auf Ethernet0/1 aktiv und
+im Forwarding-Zustand sein. Auf R1 zeigen `show ip interface brief`,
+`show ip dhcp pool` und `show ip dhcp binding` den Zustand der
+Subinterfaces und DHCP-Pools. Für die übrigen Clients gelten VLAN 20, 30 und 99.
 
 ## Nachweise
 
