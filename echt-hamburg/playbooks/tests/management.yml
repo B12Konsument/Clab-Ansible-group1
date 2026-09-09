@@ -1,0 +1,14 @@
+---
+- name: SSH-Anmeldung vom Management-VLAN an Router und Switch
+  hosts: routers:switches
+  gather_facts: false
+  tasks:
+    - name: Authentifizierten CLI-Zugriff über VLAN99 prüfen
+      cisco.ios.ios_command:
+        commands: show privilege
+      register: privilege
+
+    - name: Administrativen Zugang nachweisen
+      ansible.builtin.assert:
+        that: "'Current privilege level is 15' in privilege.stdout[0]"
+        fail_msg: SSH funktioniert, aber der Benutzer hat keine Administratorrechte.

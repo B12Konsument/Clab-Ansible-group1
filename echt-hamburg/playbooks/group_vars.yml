@@ -2,3 +2,5 @@
 franchise_name: Echt Hamburg Franchise
 group_name: Gruppe 1
 enable_password: echt-hamburg
+# Für den Website-Test die tatsächlichen Namen eintragen.
+group_members: []

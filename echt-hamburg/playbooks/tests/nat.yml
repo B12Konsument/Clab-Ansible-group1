@@ -1,0 +1,22 @@
+---
+- name: NAT nach Testverkehr aus allen vier VLANs prüfen
+  hosts: routers
+  gather_facts: false
+  tasks:
+    - name: Aktuelle NAT-Übersetzungen auslesen
+      cisco.ios.ios_command:
+        commands: show ip nat translations
+      register: nat
+
+    - name: Vier Quelladressen müssen getestet worden sein
+      ansible.builtin.assert:
+        that: lookup('ansible.builtin.env', 'NAT_CLIENT_IPS').split() | length == 4
+
+    - name: Übersetzung jeder Client-Adresse auf die öffentliche Router-Adresse prüfen
+      ansible.builtin.assert:
+        that:
+          - >-
+            nat.stdout[0] is search('(?m)^icmp\s+200\.108\.1\.1:\d+\s+'
+            ~ (item | regex_escape) ~ ':\d+\s+200\.108\.1\.2:\d+\s+200\.108\.1\.2:\d+')
+        fail_msg: "Keine passende ICMP-NAT-Übersetzung für {{ item }} gefunden."
+      loop: "{{ lookup('ansible.builtin.env', 'NAT_CLIENT_IPS').split() }}"

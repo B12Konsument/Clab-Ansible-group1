@@ -4,7 +4,7 @@ topology:
   nodes:
     r1:
       kind: cisco_iol
-      image: cl-cisco-router:arm64
+      image: cl-cisco-router:latest
       labels:
         ansible-group: routers
       startup-config: configs/r1.partial.cfg
@@ -14,7 +14,7 @@ topology:
     s1:
       kind: cisco_iol
       type: L2
-      image: containerlab-cisco-switch:arm64
+      image: containerlab-cisco-switch:latest
       labels:
         ansible-group: switches
       startup-config: configs/s1.partial.cfg

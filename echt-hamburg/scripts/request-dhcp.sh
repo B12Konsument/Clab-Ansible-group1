@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-set -euo pipefail
-
-lab_name="echt-hamburg"
-failed=0
-for node in support-client it-client webserver management-client; do
+source "$(dirname -- "${BASH_SOURCE[0]}")/test-common.sh"
+require_lab
+for index in "${!nodes[@]}"; do
+  node="${nodes[$index]}"
+  vlan="${vlan_ids[$index]}"
   container="clab-${lab_name}-${node}"
   printf '\nDHCP: %s (eth1)\n' "$container"
   # Nach der Konfiguration kann der Trunk noch auf STP-Forwarding warten.
@@ -12,7 +12,13 @@ for node in support-client it-client webserver management-client; do
     udhcpc -i eth1 -n -q -t 15 -T 3
     ip -4 addr show dev eth1
   '; then
-    printf 'DHCP erfolgreich: %s\n' "$node"
+    # Die Zuordnung folgt dem aktuellen Adressplan. Die Abweichung von
+    # 192.168.108.0/24 wird separat in test-configuration.sh geprüft.
+    check "$node: Adresse, /24-Maske und Gateway für VLAN $vlan" \
+      docker exec "$container" sh -ec '
+        ip -4 -o addr show dev eth1 | grep -Eq "inet 192\\.168\\.$1\\.[0-9]+/24 "
+        ip -4 route show | grep -Eq "^default via 192\\.168\\.$1\\.1 dev eth1( |$)"
+      ' sh "$vlan"
   else
     printf 'DHCP fehlgeschlagen: %s. VLAN, Trunk und DHCP-Pool prüfen.\n' "$node" >&2
     failed=1
