@@ -18,7 +18,8 @@ declare -a image_specs=(
 if [[ "${1:-}" == "--help" ]]; then
   echo "Aufruf: ./setup-echt-hamburg-images-x86_64.sh [--configure-only]"
   echo "Importiert lokale AMD64-Images aus ZIP/Ordner und stellt die Topologie auf :latest."
-  echo "--configure-only: Nur die Topologie anpassen (vom Fedora-Installer verwendet)."
+  echo "Fuer x86_64-Linux-Hosts, einschliesslich Fedora und Nobara."
+  echo "--configure-only: Nur die Topologie anpassen (vom Host-Installer verwendet)."
   exit 0
 fi
 if (( $# > 1 )) || [[ $# == 1 && "$1" != "--configure-only" ]]; then

@@ -25,9 +25,9 @@ Benötigt werden Docker, Containerlab und Ansible. Die einmalige Einrichtung
 der lokalen Cisco-Images ist in der übergeordneten README beschrieben.
 
 Für Fedora 44 installiert `../setup-fedora-44.sh` alle Host-Werkzeuge und die
-Ansible-Collections. Anleitung: [Fedora 44 einrichten](../README.md#fedora-44-einrichten).
+Ansible-Collections. Anleitung: [Fedora 44 oder Nobara einrichten](../README.md#fedora-44-oder-nobara-einrichten).
 
-Auf Intel-/AMD-Rechnern `../setup-fedora-44-x86_64.sh` und anschließend
+Auf Intel-/AMD-Rechnern mit Fedora 44 oder Nobara `../setup-fedora-44-x86_64.sh` und anschließend
 `../setup-echt-hamburg-images-x86_64.sh` verwenden. Diese Varianten stellen die
 Cisco-Images in der Topologie auf `:latest` um und prüfen beim Import auf AMD64.
 

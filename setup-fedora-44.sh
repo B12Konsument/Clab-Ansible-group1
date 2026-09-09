@@ -8,8 +8,9 @@ script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 x86_64_mode=false
 
 if [[ "${1:-}" == "--help" ]]; then
-  echo "Aufruf: ./setup-fedora-44.sh"
+  echo "Aufruf: ./setup-fedora-44.sh [--x86_64]"
   echo "Installiert Docker CE, Containerlab und Ansible fuer Fedora 44."
+  echo "--x86_64: Auch Nobara unterstuetzen und die Cisco-Topologie auf :latest umstellen."
   echo "Benoetigt Internet und sudo; Cisco-Images werden separat importiert."
   exit 0
 fi
@@ -20,15 +21,29 @@ elif (( $# > 0 )); then
   exit 1
 fi
 
-# Auch Fedora Asahi Remix 44 auf ARM64 unterstuetzen.
+# Fedora Asahi Remix 44 auf ARM64 und Nobara im x86_64-Modus unterstuetzen.
 # shellcheck disable=SC1091
 source /etc/os-release
-if [[ "$VERSION_ID" != "44" || ( "$ID" != "fedora" && "$ID" != "fedora-asahi-remix" ) ]]; then
-  echo "Dieses Skript ist fuer Fedora 44 (einschliesslich Asahi Remix)." >&2
-  exit 1
-fi
+case "${ID:-}" in
+  fedora|fedora-asahi-remix)
+    if [[ "${VERSION_ID:-}" != "44" ]]; then
+      echo "Dieses Skript benoetigt Fedora 44 (einschliesslich Asahi Remix)." >&2
+      exit 1
+    fi
+    ;;
+  nobara)
+    if ! "$x86_64_mode"; then
+      echo "Fuer Nobara bitte ./setup-fedora-44-x86_64.sh verwenden." >&2
+      exit 1
+    fi
+    ;;
+  *)
+    echo "Unterstuetzt werden Fedora 44 (einschliesslich Asahi Remix) und Nobara auf x86_64." >&2
+    exit 1
+    ;;
+esac
 if [[ -e /run/ostree-booted ]]; then
-  echo "Fedora Atomic wird von diesem DNF-Skript nicht unterstuetzt." >&2
+  echo "Atomic-/OSTree-Systeme werden von diesem DNF-Skript nicht unterstuetzt." >&2
   exit 1
 fi
 case "$(uname -m)" in
@@ -50,6 +65,18 @@ if (( EUID != 0 )); then
 fi
 target_user="${SUDO_USER:-root}"
 
+# Je nach Distribution ist DNF 4 oder DNF 5 installiert. Fuer alle Schritte
+# denselben Paketmanager und dessen passende config-manager-Syntax verwenden.
+dnf_cmd=dnf
+dnf_plugins=dnf-plugins-core
+if command -v dnf5 >/dev/null 2>&1; then
+  dnf_cmd=dnf5
+  dnf_plugins=dnf5-plugins
+elif ! command -v dnf >/dev/null 2>&1; then
+  echo "Fehler: DNF fehlt. Ein RPM-/DNF-basiertes System wird benoetigt." >&2
+  exit 1
+fi
+
 # Bestehende alternative Container-Installationen nicht ungeprueft entfernen.
 conflicts=()
 for package in docker docker-client docker-client-latest docker-common \
@@ -67,18 +94,23 @@ if (( ${#conflicts[@]} )); then
 fi
 
 echo "Installiere Basiswerkzeuge und Ansible ..."
-dnf install -y dnf5-plugins ca-certificates git jq tar unzip \
+"$dnf_cmd" install -y "$dnf_plugins" ca-certificates git jq tar unzip \
   openssh-clients iproute iputils ethtool iptables-nft \
   ansible-core python3-ansible-pylibssh
 if ! command -v curl >/dev/null 2>&1; then
-  dnf install -y curl-minimal
+  "$dnf_cmd" install -y curl-minimal
 fi
 
 echo "Installiere Docker CE ..."
 if [[ ! -f /etc/yum.repos.d/docker-ce.repo ]]; then
-  dnf config-manager addrepo --from-repofile https://download.docker.com/linux/fedora/docker-ce.repo
+  # Auch auf Nobara die Fedora-Paketquelle mit dem lokalen $releasever nutzen.
+  if [[ "$dnf_cmd" == "dnf5" ]]; then
+    "$dnf_cmd" config-manager addrepo --from-repofile https://download.docker.com/linux/fedora/docker-ce.repo
+  else
+    "$dnf_cmd" config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
+  fi
 fi
-dnf install -y docker-ce docker-ce-cli containerd.io \
+"$dnf_cmd" install -y docker-ce docker-ce-cli containerd.io \
   docker-buildx-plugin docker-compose-plugin
 systemctl enable --now docker
 
@@ -93,7 +125,7 @@ if ! command -v containerlab >/dev/null 2>&1; then
     echo "Containerlab-Version konnte nicht ermittelt werden: $release_url" >&2
     exit 1
   fi
-  dnf install -y "https://github.com/srl-labs/containerlab/releases/download/v${clab_version}/containerlab_${clab_version}_linux_${clab_arch}.rpm"
+  "$dnf_cmd" install -y "https://github.com/srl-labs/containerlab/releases/download/v${clab_version}/containerlab_${clab_version}_linux_${clab_arch}.rpm"
 fi
 
 if [[ "$target_user" != "root" ]]; then

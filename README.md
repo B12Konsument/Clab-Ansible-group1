@@ -1,6 +1,6 @@
 # Clab-Ansible-group1
 
-## Fedora 44 einrichten
+## Fedora 44 oder Nobara einrichten
 
 Im geklonten Projektordner ausführen:
 
@@ -8,13 +8,17 @@ Im geklonten Projektordner ausführen:
 # Bisherige Einrichtung (zum Beispiel auf Fedora Asahi Remix):
 ./setup-fedora-44.sh
 
-# Auf Intel-/AMD-Rechnern stattdessen:
+# Auf Intel-/AMD-Rechnern mit Fedora 44 oder Nobara stattdessen:
 ./setup-fedora-44-x86_64.sh
 ```
 
 Das Skript benötigt Internet und fragt bei Bedarf nach dem sudo-Passwort.
 Es unterstützt Fedora 44 Workstation/Server und Fedora Asahi Remix 44 auf
-ARM64 sowie x86_64; Fedora Atomic wird nicht unterstützt.
+ARM64 sowie x86_64. Die x86_64-Variante unterstützt zusätzlich Nobara, ohne
+dessen Versionsnummer auf 44 festzulegen. Atomic-/OSTree-Systeme werden nicht
+unterstützt. Je nach vorhandenem Paketmanager nutzt das Skript DNF 5 oder DNF 4
+mit den passenden Plugins. Docker CE kommt auch auf Nobara aus dem offiziellen
+Fedora-Repository; die Paketversion richtet sich nach dem lokalen DNF-`$releasever`.
 
 Installiert werden:
 
@@ -91,6 +95,8 @@ weiterhin unterstützt.
 
 ## Einrichtung auf x86_64 (Intel/AMD)
 
+Für Fedora 44 und Nobara gelten dieselben Befehle; die Skriptnamen bleiben gleich.
+
 ```bash
 ./setup-fedora-44-x86_64.sh
 # Danach vollständig ab- und wieder anmelden.
@@ -103,7 +109,7 @@ ansible-playbook -i clab-echt-hamburg/ansible-inventory.yml \
 ./scripts/request-dhcp.sh
 ```
 
-Das Fedora-Skript verwendet die gemeinsame Paketinstallation und passt danach
+Das Host-Setup verwendet die gemeinsame Paketinstallation und passt danach
 die Topologie an. Der x86_64-Image-Import prüft den Docker-Daemon und die Images
 auf AMD64, setzt `cl-cisco-router:latest` und
 `containerlab-cisco-switch:latest` und passt nach erfolgreichem Import ebenfalls

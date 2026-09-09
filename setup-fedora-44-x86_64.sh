@@ -4,7 +4,7 @@ set -euo pipefail
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 if [[ "${1:-}" == "--help" ]]; then
   echo "Aufruf: ./setup-fedora-44-x86_64.sh"
-  echo "Installiert die Fedora-44-Host-Werkzeuge auf x86_64 und stellt die"
+  echo "Installiert die Host-Werkzeuge fuer Fedora 44 oder Nobara auf x86_64 und stellt die"
   echo "Cisco-Images der Lab-Topologie auf :latest um. Import danach separat:"
   echo "  ./setup-echt-hamburg-images-x86_64.sh"
   exit 0
