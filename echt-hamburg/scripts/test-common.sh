@@ -30,8 +30,9 @@ require_lab() {
   fi
 }
 
-# Eigenes Inventar: keine Abhängigkeit von DNS oder leeren ansible_host-Feldern
-# im generierten Containerlab-Inventar. Die Zugangsdaten werden nicht ausgegeben.
+# Alle Cisco-Prüfungen laufen über die festen VLAN99-Adressen. Nach erneutem
+# Deployment können Docker-Adressen von gespeicherten IOS-Adressen abweichen
+# und sogar auf das falsche Gerät führen. Zugangsdaten werden nicht ausgegeben.
 run_playbook() (
   umask 077
   test_tmp="$(mktemp -d)"
@@ -39,20 +40,14 @@ run_playbook() (
   export ANSIBLE_LOCAL_TEMP="$test_tmp/local"
   export ANSIBLE_PERSISTENT_CONTROL_PATH_DIR="$test_tmp/pc"
   export ANSIBLE_HOST_KEY_CHECKING=False
-  python3 - "$lab_name" "${2:-direct}" >"$test_tmp/inventory.json" <<'PY'
-import json, os, shlex, subprocess, sys
-lab, mode = sys.argv[1:]
+  python3 - "$lab_name" >"$test_tmp/inventory.json" <<'PY'
+import json, os, shlex, sys
+lab = sys.argv[1]
 groups = {}
 for node, group, vlan_ip in [('r1', 'routers', '192.168.99.1'), ('s1', 'switches', '192.168.99.2')]:
-    name = f'clab-{lab}-{node}'
-    data = json.loads(subprocess.check_output(['docker', 'inspect', name]))[0]
-    addresses = [n['IPAddress'] for n in data['NetworkSettings']['Networks'].values() if n['IPAddress']]
-    if not addresses:
-        raise SystemExit(f'Keine Docker-Management-IP für {name}')
-    host = {'ansible_host': vlan_ip if mode == 'vlan99' else addresses[0]}
-    if mode == 'vlan99':
-        host['ansible_libssh_proxy_command'] = shlex.join(
-            ['docker', 'exec', '-i', f'clab-{lab}-management-client', 'nc', vlan_ip, '22'])
+    host = {'ansible_host': vlan_ip}
+    host['ansible_libssh_proxy_command'] = shlex.join(
+        ['docker', 'exec', '-i', f'clab-{lab}-management-client', 'nc', vlan_ip, '22'])
     groups[group] = {'hosts': {node: host}}
 print(json.dumps({'all': {'children': groups, 'vars': {
     'ansible_connection': 'ansible.netcommon.network_cli',

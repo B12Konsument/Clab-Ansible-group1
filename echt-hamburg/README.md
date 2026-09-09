@@ -114,7 +114,13 @@ Ansible mit `ansible.netcommon`, `cisco.ios` und `ansible-pylibssh` (in der
 Fedora-Einrichtung enthalten). `test-common.sh` enthält nur gemeinsame
 Hilfsfunktionen. Die drei YAML-Dateien unter `playbooks/tests/` enthalten die
 lesenden Cisco-Prüfungen, die von den jeweiligen Shell-Skripten aufgerufen werden.
-Die Tests erstellen ihr eigenes temporäres Inventar aus den Docker-Adressen.
+Die Cisco-Tests erstellen ein temporäres Inventar mit den festen VLAN99-Adressen
+`192.168.99.1` und `192.168.99.2`. SSH läuft für Konfiguration, Management und NAT
+über den Management-Client. Dafür muss VLAN 99 bereits konfiguriert sein und der
+Client seine DHCP-Adresse besitzen. Docker-Adressen werden nicht als Cisco-Ziele
+verwendet: Nach einem erneuten Deployment können sie von den gespeicherten
+IOS-Management-Adressen abweichen und auf ein anderes Gerät führen. Diese
+Abweichung muss für den Bootstrap-/Konfigurationszugang gesondert behoben werden.
 Standardzugang ist der vom Projekt konfigurierte Benutzer `netadmin` / `admin`;
 abweichende Werte sind über `LAB_USER` und `LAB_PASSWORD` möglich, ein anderer
 Lab-Name über `LAB_NAME`.
