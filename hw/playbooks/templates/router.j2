@@ -1,0 +1,59 @@
+hostname R1-{{ franchise_name | upper | replace(' ', '-') }}
+no ip domain lookup
+service timestamps log datetime msec
+ip domain name echt-hamburg.de
+ip ssh version 2
+banner motd ^C
+*** {{ franchise_name }} | {{ group_name }} ***
+Unbefugter Zugriff ist verboten.
+^C
+!
+ip dhcp excluded-address 192.168.10.1
+ip dhcp excluded-address 192.168.20.1
+ip dhcp excluded-address 192.168.30.1
+ip dhcp excluded-address 192.168.99.1 192.168.99.10
+!
+ip dhcp pool CUSTOMER-SUPPORT
+ network 192.168.10.0 255.255.255.0
+ default-router 192.168.10.1
+ domain-name echt-hamburg.de
+!
+ip dhcp pool IT
+ network 192.168.20.0 255.255.255.0
+ default-router 192.168.20.1
+ domain-name echt-hamburg.de
+!
+ip dhcp pool WEBSERVER
+ network 192.168.30.0 255.255.255.0
+ default-router 192.168.30.1
+ domain-name echt-hamburg.de
+!
+ip dhcp pool MANAGEMENT
+ network 192.168.99.0 255.255.255.0
+ default-router 192.168.99.1
+ domain-name echt-hamburg.de
+!
+interface {{ router_trunk }}
+ description 802.1Q-Trunk-zu-S1
+ no ip address
+ no shutdown
+!
+interface {{ router_trunk }}.10
+ encapsulation dot1Q 10
+ ip address 192.168.10.1 255.255.255.0
+!
+interface {{ router_trunk }}.20
+ encapsulation dot1Q 20
+ ip address 192.168.20.1 255.255.255.0
+!
+interface {{ router_trunk }}.30
+ encapsulation dot1Q 30
+ ip address 192.168.30.1 255.255.255.0
+!
+interface {{ router_trunk }}.99
+ encapsulation dot1Q 99
+ ip address 192.168.99.1 255.255.255.0
+!
+line vty 0 4
+ login local
+ transport input ssh
