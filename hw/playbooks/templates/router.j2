@@ -1,17 +1,15 @@
-hostname R1-{{ franchise_name | upper | replace(' ', '-') }}
 no ip domain lookup
 service timestamps log datetime msec
-ip domain name echt-hamburg.de
-ip ssh version 2
 banner motd ^C
 *** {{ franchise_name }} | {{ group_name }} ***
 Unbefugter Zugriff ist verboten.
+Gott Strafe Cisco
 ^C
 !
 ip dhcp excluded-address 192.168.10.1
 ip dhcp excluded-address 192.168.20.1
 ip dhcp excluded-address 192.168.30.1
-ip dhcp excluded-address 192.168.99.1 192.168.99.10
+ip dhcp excluded-address 192.168.99.1 192.168.99.33
 !
 ip dhcp pool CUSTOMER-SUPPORT
  network 192.168.10.0 255.255.255.0
@@ -33,26 +31,44 @@ ip dhcp pool MANAGEMENT
  default-router 192.168.99.1
  domain-name echt-hamburg.de
 !
+access-list 1 permit 192.168.0.0 0.0.255.255
+!
 interface {{ router_trunk }}
  description 802.1Q-Trunk-zu-S1
  no ip address
  no shutdown
+ ip nat inside
 !
 interface {{ router_trunk }}.10
  encapsulation dot1Q 10
+ description IT
  ip address 192.168.10.1 255.255.255.0
+ ip nat inside
 !
 interface {{ router_trunk }}.20
  encapsulation dot1Q 20
+ description CustomerSupport
  ip address 192.168.20.1 255.255.255.0
+ ip nat inside
 !
 interface {{ router_trunk }}.30
  encapsulation dot1Q 30
+ description Webserver
  ip address 192.168.30.1 255.255.255.0
+ ip nat inside
 !
 interface {{ router_trunk }}.99
  encapsulation dot1Q 99
+ description Management
  ip address 192.168.99.1 255.255.255.0
+ ip nat inside
+!
+interface {{ router_wan }}
+ description WAN Interface
+ ip address dhcp
+ ip nat outside
+!
+ip nat inside source list 1 interface {{ router_wan }} overload
 !
 line vty 0 4
  login local

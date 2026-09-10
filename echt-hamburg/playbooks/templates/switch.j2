@@ -1,9 +1,11 @@
 hostname S1-{{ franchise_name | upper | replace(' ', '-') }}
 no ip domain lookup
 no service password-encryption
+no enable secret
 enable password {{ enable_password }}
+username admin privilege 15 password admin
 username netadmin privilege 15 password admin
-ip domain name echt-hamburg.de
+ip domain name {{ domain_name }}
 ip ssh version 2
 banner motd ^C
 *** {{ franchise_name }} | {{ group_name }} ***
@@ -12,61 +14,39 @@ Unbefugter Zugriff ist verboten.
 !
 vtp mode transparent
 !
-vlan 10
- name CUSTOMER_SUPPORT
-vlan 20
- name IT
-vlan 30
- name WEBSERVER
-vlan 99
- name MANAGEMENT
+{% for vlan in vlans %}
+vlan {{ vlan.id }}
+ name {{ vlan.name }}
+{% endfor %}
 !
-interface Ethernet0/1
+interface {{ switch_trunk_port }}
  description 802.1Q-Trunk-zu-R1
  switchport trunk encapsulation dot1q
+ switchport trunk allowed vlan {{ vlans | map(attribute='id') | join(',') }}
  switchport mode trunk
- switchport trunk native vlan 1
- switchport trunk allowed vlan 10,20,30,99
  no shutdown
 !
-interface Ethernet0/2
- description Customer-Support-Client
+{% for vlan in vlans %}
+interface {{ vlan.switch_port }}
+ description {{ vlan.node }}
+ switchport access vlan {{ vlan.id }}
  switchport mode access
- switchport access vlan 10
  spanning-tree portfast
  no shutdown
 !
-interface Ethernet0/3
- description IT-Client
- switchport mode access
- switchport access vlan 20
- spanning-tree portfast
- no shutdown
-!
-interface Ethernet1/0
- description Webserver
- switchport mode access
- switchport access vlan 30
- spanning-tree portfast
- no shutdown
-!
-interface Ethernet1/1
- description Management-Client
- switchport mode access
- switchport access vlan 99
- spanning-tree portfast
- no shutdown
-!
-interface range Ethernet1/2 - 3
+{% endfor %}
+{% for port in switch_unused_ports %}
+interface {{ port }}
  description UNGENUTZT
  shutdown
 !
+{% endfor %}
 interface Vlan99
  description Management-SVI
- ip address 192.168.99.2 255.255.255.0
+ ip address {{ switch_management_ip }} {{ lan_netmask }}
  no shutdown
 !
-ip default-gateway 192.168.99.1
+ip default-gateway {{ (vlans | selectattr('id', 'equalto', 99) | first).gateway }}
 !
 line vty 0 4
  login local

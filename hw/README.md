@@ -46,6 +46,18 @@ und die vorhandene Gerätekonfiguration zuvor sichern und auf Konflikte prüfen.
 
 ## Einmalige Vorbereitung über die Konsole
 
+Wenn SSH bereits eingerichtet ist, können Modell, IOS-Version, Schnittstellen
+und erkannte Nachbarn mit einem lesenden Playbook ermittelt werden. Vorher die
+Zieladressen und Benutzernamen in `inventory.yml` auf die echten Geräte setzen:
+
+```bash
+ansible-playbook playbooks/inspect.yml --ask-pass
+```
+
+Die Übersicht erscheint im Terminal; Details werden lokal unter
+`reports/r1.json` und `reports/s1.json` gespeichert. Das Playbook ändert keine
+Gerätekonfiguration. Die Berichte werden nicht versioniert.
+
 Ansible benötigt bereits funktionierenden SSH-Zugriff. Auf beiden Geräten
 zunächst Hostname, Domain, einen Benutzer mit Privilege 15 und eigenem Secret,
 RSA-Schlüssel sowie SSH auf den VTY-Leitungen einrichten. Beispiel, Platzhalter

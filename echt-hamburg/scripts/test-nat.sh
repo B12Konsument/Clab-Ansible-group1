@@ -10,7 +10,7 @@ for node in "${nodes[@]}"; do
   fi
   NAT_CLIENT_IPS+="$address "
   check "$node -> simuliertes Internet über eth1" \
-    docker exec "clab-${lab_name}-${node}" ping -I eth1 -c 2 -W 2 200.108.1.2
+    docker exec "clab-${lab_name}-${node}" ping -I eth1 -c 2 -W 2 "$public_peer"
 done
 # Unmittelbar nach den Pings die ICMP-Übersetzungen prüfen.
 check 'NAT/PAT: private Quelladressen werden zu 200.108.1.1 übersetzt' \

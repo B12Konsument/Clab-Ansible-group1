@@ -1,76 +1,49 @@
 hostname R1-{{ franchise_name | upper | replace(' ', '-') }}
 no ip domain lookup
 no service password-encryption
+no enable secret
 service timestamps log datetime msec
 enable password {{ enable_password }}
+username admin privilege 15 password admin
 username netadmin privilege 15 password admin
-ip domain name echt-hamburg.de
+ip domain name {{ domain_name }}
 ip ssh version 2
 banner motd ^C
 *** {{ franchise_name }} | {{ group_name }} ***
 Unbefugter Zugriff ist verboten.
 ^C
 !
-ip dhcp excluded-address 192.168.10.1
-ip dhcp excluded-address 192.168.20.1
-ip dhcp excluded-address 192.168.30.1
-ip dhcp excluded-address 192.168.99.1 192.168.99.2
+{% for vlan in vlans %}
+ip dhcp excluded-address {{ vlan.gateway }}{{ (' ' ~ switch_management_ip) if vlan.id == 99 else '' }}
+ip dhcp pool {{ vlan.name }}
+ network {{ vlan.network }} {{ lan_netmask }}
+ default-router {{ vlan.gateway }}
+ domain-name {{ domain_name }}
 !
-ip dhcp pool CUSTOMER-SUPPORT
- network 192.168.10.0 255.255.255.0
- default-router 192.168.10.1
- domain-name echt-hamburg.de
+{% endfor %}
+ip access-list standard 1
+{% for vlan in vlans %}
+ {{ loop.index * 10 }} permit {{ vlan.network }} 0.0.0.255
+{% endfor %}
 !
-ip dhcp pool IT
- network 192.168.20.0 255.255.255.0
- default-router 192.168.20.1
- domain-name echt-hamburg.de
+ip nat inside source list 1 interface {{ router_internet_port }} overload
+ip route 0.0.0.0 0.0.0.0 {{ public_peer }}
 !
-ip dhcp pool WEBSERVER
- network 192.168.30.0 255.255.255.0
- default-router 192.168.30.1
- domain-name echt-hamburg.de
-!
-ip dhcp pool MANAGEMENT
- network 192.168.99.0 255.255.255.0
- default-router 192.168.99.1
- domain-name echt-hamburg.de
-!
-access-list 1 permit 192.168.10.0 0.0.0.255
-access-list 1 permit 192.168.20.0 0.0.0.255
-access-list 1 permit 192.168.30.0 0.0.0.255
-access-list 1 permit 192.168.99.0 0.0.0.255
-ip nat inside source list 1 interface Ethernet0/2 overload
-ip route 0.0.0.0 0.0.0.0 200.108.1.2
-!
-interface Ethernet0/1
+interface {{ router_trunk_port }}
  description 802.1Q-Trunk-zu-S1
  no ip address
  no shutdown
 !
-interface Ethernet0/1.10
- encapsulation dot1Q 10
- ip address 192.168.10.1 255.255.255.0
+{% for vlan in vlans %}
+interface {{ router_trunk_port }}.{{ vlan.id }}
+ encapsulation dot1Q {{ vlan.id }}
+ ip address {{ vlan.gateway }} {{ lan_netmask }}
  ip nat inside
 !
-interface Ethernet0/1.20
- encapsulation dot1Q 20
- ip address 192.168.20.1 255.255.255.0
- ip nat inside
-!
-interface Ethernet0/1.30
- encapsulation dot1Q 30
- ip address 192.168.30.1 255.255.255.0
- ip nat inside
-!
-interface Ethernet0/1.99
- encapsulation dot1Q 99
- ip address 192.168.99.1 255.255.255.0
- ip nat inside
-!
-interface Ethernet0/2
+{% endfor %}
+interface {{ router_internet_port }}
  description Internet-Uplink
- ip address 200.108.1.1 255.255.255.240
+ ip address {{ public_ip }} {{ public_netmask }}
  ip nat outside
  no shutdown
 !

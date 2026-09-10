@@ -1,32 +1,90 @@
 ---
-- name: Router der Franchise-Filiale konfigurieren
-  hosts: routers
+- name: Adressplan und Website vorbereiten
+  hosts: localhost
+  connection: local
   gather_facts: false
-  connection: ansible.netcommon.network_cli
-  collections:
-    - cisco.ios
-  vars:
-    ansible_network_os: cisco.ios.ios
-    ansible_user: admin
-    ansible_password: admin
+  any_errors_fatal: true
+  vars_files: [group_vars.yml]
   tasks:
-    - name: R1-Konfiguration bereitstellen
-      cisco.ios.ios_config:
-        src: templates/router.j2
-        save_when: modified
+    - name: Vorgaben und Adressplan validieren
+      ansible.builtin.command:
+        argv: [python3, "{{ playbook_dir }}/../scripts/validate-settings.py", "{{ playbook_dir }}/group_vars.yml"]
+      changed_when: false
 
-- name: Switch der Franchise-Filiale konfigurieren
-  hosts: switches
+    - name: Website aus den Filial- und Gruppenangaben erzeugen
+      ansible.builtin.template:
+        src: templates/website.html.j2
+        dest: "{{ playbook_dir }}/../website/index.html"
+        mode: '0644'
+
+- name: Router und Switch der Franchise-Filiale konfigurieren
+  hosts: routers:switches
   gather_facts: false
+  any_errors_fatal: true
   connection: ansible.netcommon.network_cli
-  collections:
-    - cisco.ios
+  vars_files: [group_vars.yml]
   vars:
     ansible_network_os: cisco.ios.ios
-    ansible_user: admin
-    ansible_password: admin
+    ansible_network_cli_ssh_type: libssh
+    ansible_connect_timeout: 15
+    ansible_command_timeout: 30
+    ansible_network_cli_retries: 1
+    ansible_user: "{{ bootstrap_user | default('admin') }}"
+    ansible_password: "{{ bootstrap_password | default('admin') }}"
   tasks:
-    - name: S1-Konfiguration bereitstellen
+    - name: Auf den SSH-Start nach dem Deployment warten
+      ansible.builtin.wait_for:
+        host: "{{ ansible_host }}"
+        port: 22
+        timeout: 180
+      delegate_to: localhost
+      vars:
+        ansible_connection: local
+
+    - name: Auf eine funktionsfähige IOS-CLI warten und Konfiguration lesen
+      cisco.ios.ios_command:
+        commands: show running-config
+      register: initial_config
+      until: initial_config is succeeded
+      retries: 6
+      delay: 5
+      no_log: true
+
+    # Entfernen und Wiederanlegen müssen getrennte ios_config-Aufrufe sein.
+    # Sonst kann der Konfigurationsparser die beiden Benutzerzeilen zusammenfassen.
+    - name: Alten Containerlab-Secret-Eintrag entfernen
       cisco.ios.ios_config:
-        src: templates/switch.j2
+        lines:
+          - config_line: no username admin
+            prompt: '\[confirm\]'
+            answer: "\r"
+        match: none
+      when: initial_config.stdout[0] is search('(?m)^username admin[^\n]* secret ')
+      no_log: true
+
+    - name: Gerätekonfiguration bereitstellen und speichern
+      cisco.ios.ios_config:
+        content: "{{ lookup('ansible.builtin.template', 'templates/' ~ ('router' if inventory_hostname in groups['routers'] else 'switch') ~ '.j2') }}"
         save_when: modified
+      no_log: true
+
+- name: DHCP und Routen der Lab-Clients einrichten
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  any_errors_fatal: true
+  vars_files: [group_vars.yml]
+  tasks:
+    - name: DHCP-Adressen beziehen und Firmennetz über eth1 routen
+      ansible.builtin.command:
+        argv: [bash, "{{ playbook_dir }}/../scripts/request-dhcp.sh"]
+      environment:
+        LAB_NAME: "{{ lab_name }}"
+      register: dhcp
+      changed_when: true
+      when: configure_lab_clients | default(true) | bool
+
+    - name: DHCP-Ergebnis anzeigen
+      ansible.builtin.debug:
+        var: dhcp.stdout_lines
+      when: not (dhcp.skipped | default(false))

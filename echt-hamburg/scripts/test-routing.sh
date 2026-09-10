@@ -6,7 +6,7 @@ require_lab
 for index in "${!nodes[@]}"; do
   source_node="${nodes[$index]}"
   check "$source_node -> eigenes Gateway" docker exec "clab-${lab_name}-${source_node}" \
-    ping -I eth1 -c 2 -W 2 "192.168.${vlan_ids[$index]}.1"
+    ping -I eth1 -c 2 -W 2 "${gateways[$index]}"
   for target in "${nodes[@]}"; do
     [[ "$source_node" == "$target" ]] && continue
     if ! address="$(client_ip "$target")" || [[ -z "$address" ]]; then

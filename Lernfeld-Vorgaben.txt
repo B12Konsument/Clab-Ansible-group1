@@ -8,7 +8,7 @@ Sie sind Teil des IT-Teams der Echt Hamburg GmbH. Ihre Aufgabe besteht darin, di
 An jedem Standort wurden bereits ein Switch, ein Router und ein Webserver ausgeliefert und installiert.
 
 Der Router wird mit dem Internet verbunden und erhält eine öffentliche IP-Adresse (200.108.1.1/28).
-Das Firmennetzwerk eines Franchise-Nehmers wird dynamisch mit privaten IP-Adressen (192.168.108.0/24) ausgestattet und in vier VLANs unterteilt:
+Das Firmennetzwerk eines Franchise-Nehmers wird dynamisch mit privaten IP-Adressen (192.168.x.0/24) ausgestattet und in vier VLANs unterteilt:
 VLAN 10: Customer Support
 VLAN 20: IT
 VLAN 30: Webserver

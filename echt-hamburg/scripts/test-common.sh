@@ -3,8 +3,23 @@
 set -euo pipefail
 project_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 lab_name="${LAB_NAME:-echt-hamburg}"
-nodes=(support-client it-client webserver management-client)
-vlan_ids=(10 20 30 99)
+# Ein gemeinsamer Adressplan für Konfiguration und Funktionsprüfungen.
+settings="$(python3 - "$project_dir/playbooks/group_vars.yml" <<'PYSETTINGS'
+import sys, yaml
+from pathlib import Path
+s = yaml.safe_load(Path(sys.argv[1]).read_text())
+print(s['lan_prefix'], s['public_network'], s['public_peer'], sep='\t')
+for v in s['vlans']:
+    print(v['node'], v['id'], v['network'], v['gateway'], sep='\t')
+PYSETTINGS
+)"
+{
+  IFS=$'\t' read -r lan_prefix public_network public_peer
+  nodes=() vlan_ids=() networks=() gateways=()
+  while IFS=$'\t' read -r node vlan network gateway; do
+    nodes+=("$node") vlan_ids+=("$vlan") networks+=("$network") gateways+=("$gateway")
+  done
+} <<< "$settings"
 failed=0
 
 check() {
@@ -40,11 +55,14 @@ run_playbook() (
   export ANSIBLE_LOCAL_TEMP="$test_tmp/local"
   export ANSIBLE_PERSISTENT_CONTROL_PATH_DIR="$test_tmp/pc"
   export ANSIBLE_HOST_KEY_CHECKING=False
-  python3 - "$lab_name" >"$test_tmp/inventory.json" <<'PY'
-import json, os, shlex, sys
+  python3 - "$lab_name" "$project_dir/playbooks/group_vars.yml" >"$test_tmp/inventory.json" <<'PY'
+import json, os, shlex, sys, yaml
+from pathlib import Path
 lab = sys.argv[1]
+settings = yaml.safe_load(Path(sys.argv[2]).read_text())
+router_ip = next(v['gateway'] for v in settings['vlans'] if v['id'] == 99)
 groups = {}
-for node, group, vlan_ip in [('r1', 'routers', '192.168.99.1'), ('s1', 'switches', '192.168.99.2')]:
+for node, group, vlan_ip in [('r1', 'routers', router_ip), ('s1', 'switches', settings['switch_management_ip'])]:
     host = {'ansible_host': vlan_ip}
     host['ansible_libssh_proxy_command'] = shlex.join(
         ['docker', 'exec', '-i', f'clab-{lab}-management-client', 'nc', vlan_ip, '22'])

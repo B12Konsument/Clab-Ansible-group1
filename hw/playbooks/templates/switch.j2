@@ -1,10 +1,8 @@
-hostname S1-{{ franchise_name | upper | replace(' ', '-') }}
 no ip domain lookup
-ip domain name echt-hamburg.de
-ip ssh version 2
 banner motd ^C
 *** {{ franchise_name }} | {{ group_name }} ***
 Unbefugter Zugriff ist verboten.
+Gott Strafe Cisco
 ^C
 !
 no ip routing
@@ -23,7 +21,7 @@ interface {{ switch_trunk }}
  description 802.1Q-Trunk-zu-R1
  switchport mode trunk
  switchport trunk native vlan 1
- switchport trunk allowed vlan 10,20,30,99
+ switchport trunk allowed vlan add 10,20,30,99
  no shutdown
 !
 interface {{ switch_customer }}
@@ -46,13 +44,6 @@ interface {{ switch_management }}
  switchport access vlan 99
  spanning-tree portfast
  no shutdown
-!
-interface Vlan99
- description Management-SVI
- ip address 192.168.99.2 255.255.255.0
- no shutdown
-!
-ip default-gateway 192.168.99.1
 !
 line vty 0 4
  login local

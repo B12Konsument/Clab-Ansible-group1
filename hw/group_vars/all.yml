@@ -1,7 +1,8 @@
 ---
-franchise_name: Echt Hamburg Franchise
+franchise_name: Franchise
 group_name: Gruppe 1
 router_trunk: GigabitEthernet0/0/0
+router_wan: GigabitEthernet0/0/1
 switch_trunk: FastEthernet0
 switch_customer: FastEthernet1
 switch_test: FastEthernet2

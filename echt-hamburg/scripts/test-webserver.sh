@@ -3,7 +3,8 @@ source "$(dirname -- "${BASH_SOURCE[0]}")/test-common.sh"
 require_lab
 if ! address="$(client_ip webserver)" || [[ -z "$address" ]]; then
   printf 'FEHLER: Keine Webserver-Adresse auf eth1. Zuerst request-dhcp.sh ausführen.\n' >&2
-  exit 1
+  failed=1
+  address=""
 fi
 
 test_tmp="$(mktemp -d)"
@@ -18,6 +19,7 @@ fetch_page() {
   ' sh "$address"
 }
 for node in support-client it-client management-client; do
+  [[ -n "$address" ]] || continue
   check "HTTP von $node zur Website über das Firmennetz" fetch_page "$node"
 done
 

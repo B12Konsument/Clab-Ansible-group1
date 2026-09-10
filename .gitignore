@@ -4,3 +4,6 @@ Cisco-CML-Images/**/*.tar
 Cisco-CML-Images/**/*.iol
 Cisco-CML-Images.zip
 Cisco-CML-Images
+# Laufzeit-Artefakte und lokale Testprotokolle.
+echt-hamburg/clab-echt-hamburg/
+echt-hamburg/logs/

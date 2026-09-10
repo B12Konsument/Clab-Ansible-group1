@@ -1,6 +1,45 @@
 ---
 franchise_name: Echt Hamburg Franchise
 group_name: Gruppe 1
+# Echte Namen der Projektgruppe; werden automatisch in die Website übernommen.
+group_members: [Florian, Jona, Sascha]
 enable_password: echt-hamburg
-# Für den Website-Test die tatsächlichen Namen eintragen.
-group_members: []
+lab_name: echt-hamburg
+domain_name: echt-hamburg.de
+lan_prefix: 24
+lan_netmask: 255.255.255.0
+switch_management_ip: 192.168.99.2
+router_trunk_port: Ethernet0/1
+router_internet_port: Ethernet0/2
+switch_trunk_port: Ethernet0/1
+switch_bootstrap_ports: [Ethernet0/0]
+switch_unused_ports: [Ethernet1/2, Ethernet1/3]
+public_ip: 200.108.1.1
+public_peer: 200.108.1.2
+public_network: 200.108.1.0/28
+public_netmask: 255.255.255.240
+vlans:
+  - id: 10
+    name: CUSTOMER_SUPPORT
+    node: support-client
+    network: 192.168.10.0
+    gateway: 192.168.10.1
+    switch_port: Ethernet0/2
+  - id: 20
+    name: IT
+    node: it-client
+    network: 192.168.20.0
+    gateway: 192.168.20.1
+    switch_port: Ethernet0/3
+  - id: 30
+    name: WEBSERVER
+    node: webserver
+    network: 192.168.30.0
+    gateway: 192.168.30.1
+    switch_port: Ethernet1/0
+  - id: 99
+    name: MANAGEMENT
+    node: management-client
+    network: 192.168.99.0
+    gateway: 192.168.99.1
+    switch_port: Ethernet1/1

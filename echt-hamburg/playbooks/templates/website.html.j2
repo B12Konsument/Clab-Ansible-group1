@@ -3,18 +3,18 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Echt Hamburg Franchise</title>
+    <title>{{ franchise_name | e }}</title>
   </head>
   <body>
     <main>
-      <h1>Echt Hamburg Franchise</h1>
+      <h1>{{ franchise_name | e }}</h1>
       <p>Regionale Produkte und Veranstaltungen in Hamburg für Einheimische und Gäste.</p>
-      <h2>Projektgruppe: Gruppe 1</h2>
+      <h2>Projektgruppe: {{ group_name | e }}</h2>
       <h3>Mitglieder</h3>
       <ul>
-        <li>Sascha</li>
-        <li>Jona</li>
-        <li>Florian</li>
+{% for member in group_members %}
+        <li>{{ member | e }}</li>
+{% endfor %}
       </ul>
     </main>
   </body>

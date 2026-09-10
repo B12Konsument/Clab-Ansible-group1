@@ -1,39 +1,44 @@
 name: echt-hamburg
 
+mgmt:
+  network: clab
+  ipv4-subnet: 172.20.20.0/24
+
 topology:
   nodes:
     r1:
+      mgmt-ipv4: 172.20.20.2
       kind: cisco_iol
       image: cl-cisco-router:latest
       labels:
         ansible-group: routers
       startup-config: configs/r1.partial.cfg
-      exec:
-        - ethtool -K eth1 rx-vlan-offload off tx-vlan-offload off
 
     s1:
+      mgmt-ipv4: 172.20.20.3
       kind: cisco_iol
       type: L2
       image: containerlab-cisco-switch:latest
       labels:
         ansible-group: switches
       startup-config: configs/s1.partial.cfg
-      exec:
-        - ethtool -K eth1 rx-vlan-offload off tx-vlan-offload off
 
     support-client:
+      mgmt-ipv4: 172.20.20.4
       kind: linux
       image: alpine:3.20
       labels:
         ansible-group: clients
 
     it-client:
+      mgmt-ipv4: 172.20.20.5
       kind: linux
       image: alpine:3.20
       labels:
         ansible-group: clients
 
     webserver:
+      mgmt-ipv4: 172.20.20.6
       kind: linux
       image: nginx:alpine
       binds:
@@ -42,12 +47,14 @@ topology:
         ansible-group: servers
 
     management-client:
+      mgmt-ipv4: 172.20.20.7
       kind: linux
       image: alpine:3.20
       labels:
         ansible-group: clients
 
     internet:
+      mgmt-ipv4: 172.20.20.8
       kind: linux
       image: alpine:3.20
       exec:

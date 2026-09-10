@@ -106,7 +106,7 @@ cd echt-hamburg
 containerlab deploy -t echt-hamburg.clab.yml
 ansible-playbook -i clab-echt-hamburg/ansible-inventory.yml \
   -e @playbooks/group_vars.yml playbooks/configure.yml
-./scripts/request-dhcp.sh
+./scripts/run-tests.sh
 ```
 
 Das Host-Setup verwendet die gemeinsame Paketinstallation und passt danach
