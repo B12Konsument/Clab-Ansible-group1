@@ -1,4 +1,6 @@
-no ip domain lookup
+ip domain lookup
+ip name-server 1.1.1.1 1.0.0.1
+ip dns server
 service timestamps log datetime msec
 banner motd ^C
 *** {{ franchise_name }} | {{ group_name }} ***
@@ -14,21 +16,25 @@ ip dhcp excluded-address 192.168.99.1 192.168.99.33
 ip dhcp pool CUSTOMER-SUPPORT
  network 192.168.10.0 255.255.255.0
  default-router 192.168.10.1
+ dns-server 192.168.10.1
  domain-name echt-hamburg.de
 !
 ip dhcp pool IT
  network 192.168.20.0 255.255.255.0
  default-router 192.168.20.1
+ dns-server 192.168.20.1
  domain-name echt-hamburg.de
 !
 ip dhcp pool WEBSERVER
  network 192.168.30.0 255.255.255.0
  default-router 192.168.30.1
+ dns-server 192.168.30.1
  domain-name echt-hamburg.de
 !
 ip dhcp pool MANAGEMENT
  network 192.168.99.0 255.255.255.0
  default-router 192.168.99.1
+ dns-server 192.168.99.1
  domain-name echt-hamburg.de
 !
 access-list 1 permit 192.168.0.0 0.0.255.255
