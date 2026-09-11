@@ -1,7 +1,12 @@
 ip domain lookup
-ip name-server 1.1.1.1 1.0.0.1
+ip name-server 1.1.1.1 8.8.8.8
 ip dns server
+!
+access-list 1 permit 192.168.0.0 0.0.255.255
+ip nat inside source list 1 interface {{ router_wan }} overload
+!
 service timestamps log datetime msec
+!
 banner motd ^C
 *** {{ franchise_name }} | {{ group_name }} ***
 Unbefugter Zugriff ist verboten.
@@ -37,8 +42,6 @@ ip dhcp pool MANAGEMENT
  dns-server 192.168.99.1
  domain-name echt-hamburg.de
 !
-access-list 1 permit 192.168.0.0 0.0.255.255
-!
 interface {{ router_trunk }}
  description 802.1Q-Trunk-zu-S1
  no ip address
@@ -73,8 +76,6 @@ interface {{ router_wan }}
  description WAN Interface
  ip address dhcp
  ip nat outside
-!
-ip nat inside source list 1 interface {{ router_wan }} overload
 !
 line vty 0 4
  login local
