@@ -1,0 +1,46 @@
+---
+- name: Hardwaremodell, IOS-Version und Schnittstellen auslesen
+  hosts: routers:switches
+  gather_facts: false
+  connection: ansible.netcommon.network_cli
+  vars:
+    ansible_network_os: cisco.ios.ios
+    ansible_network_cli_ssh_type: libssh
+  tasks:
+    - name: Geräte- und Schnittstellendaten lesen
+      cisco.ios.ios_facts:
+        gather_subset: [min, interfaces]
+
+    - name: Geräteübersicht anzeigen
+      ansible.builtin.debug:
+        msg:
+          hostname: "{{ ansible_facts.net_hostname }}"
+          model: "{{ ansible_facts.net_model | default('Vom virtuellen IOS nicht gemeldet') }}"
+          ios_version: "{{ ansible_facts.net_version }}"
+          interfaces: "{{ ansible_facts.net_interfaces.keys() | list | sort }}"
+
+    - name: Lokales Verzeichnis für Hardwareberichte anlegen
+      ansible.builtin.file:
+        path: "{{ playbook_dir }}/../reports"
+        state: directory
+        mode: '0700'
+      delegate_to: localhost
+      run_once: true
+      vars:
+        ansible_connection: local
+
+    - name: Gerätebericht ohne laufende Konfiguration speichern
+      ansible.builtin.copy:
+        dest: "{{ playbook_dir }}/../reports/{{ inventory_hostname | regex_replace('[^A-Za-z0-9_-]', '_') }}.json"
+        mode: '0600'
+        content: "{{ report | to_nice_json }}\n"
+      vars:
+        ansible_connection: local
+        report:
+          hostname: "{{ ansible_facts.net_hostname }}"
+          model: "{{ ansible_facts.net_model | default('Vom virtuellen IOS nicht gemeldet') }}"
+          ios_version: "{{ ansible_facts.net_version }}"
+          management_ip: "{{ ansible_host }}"
+          interfaces: "{{ ansible_facts.net_interfaces }}"
+          neighbors: "{{ ansible_facts.net_neighbors | default({}) }}"
+      delegate_to: localhost

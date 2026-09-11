@@ -25,6 +25,16 @@ def validate(settings):
     assert IPv4Address(settings["switch_management_ip"]) == mgmt_network.network_address + 2, "Switch muss die zweite Management-Adresse erhalten."
     assert settings["domain_name"] == "echt-hamburg.de", "Falsche Domäne."
     assert settings["public_ip"] == "200.108.1.1" and settings["public_netmask"] == "255.255.255.240", "Uplink muss 200.108.1.1/28 sein."
+    web = next(v for v in vlans if v['id'] == 30)
+    web_network = IPv4Network(f'{web["network"]}/{settings["lan_prefix"]}')
+    web_ip = IPv4Address(settings['webserver_ip'])
+    assert web_ip in web_network and web_ip not in (web_network.network_address, web_network.broadcast_address, IPv4Address(web['gateway'])), "Webserver braucht eine freie Hostadresse in VLAN 30."
+    client_id = bytes.fromhex(settings['webserver_client_id'].replace('.', ''))
+    assert len(client_id) == 7 and client_id[0] == 1, "DHCP-Client-ID muss Ethernet-Typ und sechs Identifikationsbytes enthalten."
+    assert settings['dhcp_dns_servers'], "DHCP-DNS-Server fehlen."
+    for server in settings['dhcp_dns_servers']:
+        IPv4Address(server)
+    IPv4Address(settings['bootstrap_ssh_host'])
     used = [settings["switch_trunk_port"], *settings["switch_bootstrap_ports"], *(v["switch_port"] for v in vlans)]
     assert len(used) == len(set(used)), "Switch-Ports dürfen nicht mehrfach zugewiesen sein."
     assert not set(used) & set(settings["switch_unused_ports"]), "Benutzte Ports dürfen nicht deaktiviert werden."

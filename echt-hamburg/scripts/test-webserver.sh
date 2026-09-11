@@ -23,6 +23,14 @@ for node in support-client it-client management-client; do
   check "HTTP von $node zur Website über das Firmennetz" fetch_page "$node"
 done
 
+fetch_public_page() {
+  docker exec "clab-${lab_name}-internet" sh -ec '
+    ip route get "$1" | grep -q "dev eth1 "
+    wget -T 10 -q -O - "http://$1/"
+  ' sh "$public_ip" >"$test_tmp/wan.html"
+}
+check 'Website vom Internet-Knoten über WAN-Portweiterleitung 80 erreichbar' fetch_public_page
+
 # Den tatsächlich ausgelieferten Inhalt auch bei einem Routingfehler prüfen.
 fetch_local_page() {
   docker exec "clab-${lab_name}-webserver" wget -T 10 -q -O - http://127.0.0.1/ >"$test_tmp/webserver.html"

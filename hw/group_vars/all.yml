@@ -7,5 +7,5 @@ switch_trunk: FastEthernet0
 switch_customer: FastEthernet1
 switch_test: FastEthernet2
 # Für den Webserver-Test auf 30 ändern; Management-Port bleibt erhalten.
-switch_test_vlan: 20
+switch_test_vlan: 30
 switch_management: FastEthernet3

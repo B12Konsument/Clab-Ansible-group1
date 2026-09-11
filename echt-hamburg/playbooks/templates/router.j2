@@ -1,5 +1,8 @@
 hostname R1-{{ franchise_name | upper | replace(' ', '-') }}
 no ip domain lookup
+! Die Router-Weboberfläche darf die weitergeleiteten Ports nicht belegen.
+no ip http server
+no ip http secure-server
 no service password-encryption
 no enable secret
 service timestamps log datetime msec
@@ -11,6 +14,7 @@ ip ssh version 2
 banner motd ^C
 *** {{ franchise_name }} | {{ group_name }} ***
 Unbefugter Zugriff ist verboten.
+Gott Strafe Cisco
 ^C
 !
 {% for vlan in vlans %}
@@ -18,16 +22,51 @@ ip dhcp excluded-address {{ vlan.gateway }}{{ (' ' ~ switch_management_ip) if vl
 ip dhcp pool {{ vlan.name }}
  network {{ vlan.network }} {{ lan_netmask }}
  default-router {{ vlan.gateway }}
+ dns-server {{ dhcp_dns_servers | join(' ') }}
  domain-name {{ domain_name }}
 !
 {% endfor %}
+ip dhcp pool WEBSERVER-RESERVATION
+ host {{ webserver_ip }} {{ lan_netmask }}
+ client-identifier {{ webserver_client_id }}
+ default-router {{ (vlans | selectattr('id', 'equalto', 30) | first).gateway }}
+ dns-server {{ dhcp_dns_servers | join(' ') }}
+ domain-name {{ domain_name }}
+!
 ip access-list standard 1
 {% for vlan in vlans %}
  {{ loop.index * 10 }} permit {{ vlan.network }} 0.0.0.255
 {% endfor %}
 !
 ip nat inside source list 1 interface {{ router_internet_port }} overload
+ip nat inside source static tcp {{ webserver_ip }} 80 interface {{ router_internet_port }} 80
+ip nat inside source static tcp {{ webserver_ip }} 443 interface {{ router_internet_port }} 443
 ip route 0.0.0.0 0.0.0.0 {{ public_peer }}
+!
+ip access-list standard 10
+ 10 permit {{ (vlans | selectattr('id', 'equalto', 99) | first).network }} 0.0.0.255
+ 20 permit host {{ bootstrap_ssh_host }}
+!
+ip access-list extended INTER-VLAN-WEB
+{% for vlan in vlans if vlan.id != 30 %}
+ permit tcp any {{ vlan.network }} 0.0.0.255 established
+{% endfor %}
+{% for vlan in vlans if vlan.id != 30 %}
+ deny tcp any {{ vlan.network }} 0.0.0.255 eq 80
+ deny tcp any {{ vlan.network }} 0.0.0.255 eq 443
+{% endfor %}
+{% for port in [80, 443] %}
+ permit tcp any {{ (vlans | selectattr('id', 'equalto', 30) | first).network }} 0.0.0.255 eq {{ port }}
+{% endfor %}
+ permit ip any any
+!
+ip access-list extended WAN-IN
+ permit tcp any any established
+ permit udp any eq 53 any
+ permit tcp any any eq 80
+ permit tcp any any eq 443
+ permit icmp any any
+ deny ip any any log
 !
 interface {{ router_trunk_port }}
  description 802.1Q-Trunk-zu-S1
@@ -37,16 +76,20 @@ interface {{ router_trunk_port }}
 {% for vlan in vlans %}
 interface {{ router_trunk_port }}.{{ vlan.id }}
  encapsulation dot1Q {{ vlan.id }}
+ description {{ vlan.name }}
  ip address {{ vlan.gateway }} {{ lan_netmask }}
  ip nat inside
+ ip access-group INTER-VLAN-WEB in
 !
 {% endfor %}
 interface {{ router_internet_port }}
  description Internet-Uplink
  ip address {{ public_ip }} {{ public_netmask }}
  ip nat outside
+ ip access-group WAN-IN in
  no shutdown
 !
 line vty 0 4
  login local
  transport input ssh
+ access-class 10 in vrf-also

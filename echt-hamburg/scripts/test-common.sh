@@ -8,13 +8,13 @@ settings="$(python3 - "$project_dir/playbooks/group_vars.yml" <<'PYSETTINGS'
 import sys, yaml
 from pathlib import Path
 s = yaml.safe_load(Path(sys.argv[1]).read_text())
-print(s['lan_prefix'], s['public_network'], s['public_peer'], sep='\t')
+print(s['lan_prefix'], s['public_network'], s['public_peer'], s['public_ip'], s['webserver_ip'], s['webserver_client_id'].replace('.', ''), sep='\t')
 for v in s['vlans']:
     print(v['node'], v['id'], v['network'], v['gateway'], sep='\t')
 PYSETTINGS
 )"
 {
-  IFS=$'\t' read -r lan_prefix public_network public_peer
+  IFS=$'\t' read -r lan_prefix public_network public_peer public_ip webserver_ip webserver_client_id
   nodes=() vlan_ids=() networks=() gateways=()
   while IFS=$'\t' read -r node vlan network gateway; do
     nodes+=("$node") vlan_ids+=("$vlan") networks+=("$network") gateways+=("$gateway")

@@ -8,7 +8,7 @@ mkdir -p "$log_dir" || exit 1
 printf 'Logverzeichnis: %s\n' "$log_dir"
 printf 'Skript\tExit-Code\n' > "$log_dir/ergebnisse.tsv"
 overall=0
-for script in request-dhcp test-configuration test-routing test-management test-nat test-webserver; do
+for script in request-dhcp test-configuration test-routing test-management test-nat test-webserver test-access; do
   printf '\nSTART %s.sh\n' "$script" | tee -a "$log_dir/gesamt.log"
   bash "$project_dir/scripts/$script.sh" 2>&1 | tee "$log_dir/$script.log" | tee -a "$log_dir/gesamt.log"
   status=${PIPESTATUS[0]}

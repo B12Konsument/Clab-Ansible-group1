@@ -75,6 +75,20 @@
   any_errors_fatal: true
   vars_files: [group_vars.yml]
   tasks:
+    - name: Internet-Uplink auch nach wiederhergestellten Lab-Verbindungen einrichten
+      ansible.builtin.command:
+        argv:
+          - docker
+          - exec
+          - "clab-{{ lab_name }}-internet"
+          - sh
+          - -ec
+          - 'ip address replace "$1" dev eth1; ip link set eth1 up'
+          - sh
+          - "{{ public_peer }}/{{ public_network.split('/')[1] }}"
+      changed_when: true
+      when: configure_lab_clients | default(true) | bool
+
     - name: DHCP-Adressen beziehen und Firmennetz über eth1 routen
       ansible.builtin.command:
         argv: [bash, "{{ playbook_dir }}/../scripts/request-dhcp.sh"]

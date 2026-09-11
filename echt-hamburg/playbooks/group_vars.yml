@@ -6,6 +6,13 @@ group_members: [Florian, Jona, Sascha]
 enable_password: echt-hamburg
 lab_name: echt-hamburg
 domain_name: echt-hamburg.de
+# Öffentliche Resolver statt der nur im Hardware-Netz erreichbaren Schul-DNS.
+dhcp_dns_servers: [1.1.1.1, 8.8.8.8]
+# Feste DHCP-Zuordnung für die WAN-Portweiterleitungen (Option 61).
+webserver_ip: 192.168.30.2
+webserver_client_id: '0102.0000.0030.02'
+# Separater Docker-Bootstrap-Zugang des Ansible-Hosts; kein Client-VLAN.
+bootstrap_ssh_host: 172.20.20.1
 lan_prefix: 24
 lan_netmask: 255.255.255.0
 switch_management_ip: 192.168.99.2

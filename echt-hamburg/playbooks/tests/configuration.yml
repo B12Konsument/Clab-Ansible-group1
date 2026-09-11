@@ -103,6 +103,9 @@
         that:
           - >-
             running.stdout[0] is search('(?ms)^ip dhcp pool ' ~ (item.name | regex_escape)
+            ~ '\n(?:(?!^!).)* dns-server ' ~ (dhcp_dns_servers | join(' ') | regex_escape) ~ '[ \t]*$')
+          - >-
+            running.stdout[0] is search('(?ms)^ip dhcp pool ' ~ (item.name | regex_escape)
             ~ '\n(?:(?!^!).)* network ' ~ (item.network | regex_escape) ~ ' ' ~ (lan_netmask | regex_escape)
             ~ '\n(?:(?!^!).)* default-router ' ~ (item.gateway | regex_escape)
             ~ '[ \t]*\n(?:(?!^!).)* domain-name ' ~ (domain_name | regex_escape))
@@ -146,9 +149,58 @@
       register: address_range
       ignore_errors: true
 
+    - name: Feste DHCP-Zuordnung und beide WAN-Portweiterleitungen prüfen
+      when: inventory_hostname in groups['routers']
+      ansible.builtin.assert:
+        that:
+          - "'ip http server' not in running.stdout[0].splitlines()"
+          - "'ip http secure-server' not in running.stdout[0].splitlines()"
+          - >-
+            running.stdout[0] is search('(?ms)^ip dhcp pool WEBSERVER-RESERVATION\n(?:(?!^!).)* host '
+            ~ (webserver_ip | regex_escape) ~ ' ' ~ (lan_netmask | regex_escape)
+            ~ '\n(?:(?!^!).)* client-identifier ' ~ (webserver_client_id | regex_escape))
+          - "('ip nat inside source static tcp ' ~ webserver_ip ~ ' 80 interface ' ~ router_internet_port ~ ' 80') in running.stdout[0]"
+          - "('ip nat inside source static tcp ' ~ webserver_ip ~ ' 443 interface ' ~ router_internet_port ~ ' 443') in running.stdout[0]"
+      register: publication
+      ignore_errors: true
+
+    - name: Eingehende Web-ACL an allen VLAN-Schnittstellen prüfen
+      when: inventory_hostname in groups['routers']
+      ansible.builtin.assert:
+        that:
+          - >-
+            running.stdout[0] is search('(?ms)^interface ' ~ (router_trunk_port | regex_escape)
+            ~ '\.' ~ (item.id | string) ~ '\n(?:(?!^!).)* ip access-group INTER-VLAN-WEB in')
+      loop: "{{ vlans }}"
+      register: web_acl_interfaces
+      ignore_errors: true
+
+    - name: WAN-ACL und SSH-Beschränkung des Routers prüfen
+      when: inventory_hostname in groups['routers']
+      ansible.builtin.assert:
+        that:
+          - >-
+            running.stdout[0] is search('(?ms)^interface ' ~ (router_internet_port | regex_escape)
+            ~ '\n(?:(?!^!).)* ip access-group WAN-IN in')
+          - >-
+            running.stdout[0] is search('(?ms)^line vty 0 4\n(?:(?!^!).)* access-class 10 in')
+          - >-
+            running.stdout[0] is search('(?ms)^ip access-list standard 10\n(?:(?!^!).)*permit '
+            ~ ((vlans | selectattr('id', 'equalto', 99) | first).network | regex_escape) ~ ' 0\.0\.0\.255')
+          - >-
+            running.stdout[0] is search('(?ms)^ip access-list extended WAN-IN\n(?:(?!^!).)*permit tcp any any established'
+            ~ '\n(?:(?!^!).)*permit udp any eq (?:domain|53) any'
+            ~ '\n(?:(?!^!).)*permit tcp any any eq (?:www|80)'
+            ~ '\n(?:(?!^!).)*permit tcp any any eq 443'
+            ~ '\n(?:(?!^!).)*permit icmp any any'
+            ~ '\n(?:(?!^!).)*deny ip any any log')
+      register: access_controls
+      ignore_errors: true
+
     - name: Gesamtergebnis der Konfigurationsprüfung
       ansible.builtin.assert:
         that: >-
-          [hostname_check, basics, bootstrap, passwords, vlan_check, ports, pools, uplink, address_range]
+          [hostname_check, basics, bootstrap, passwords, vlan_check, ports, pools, uplink, address_range,
+           publication, web_acl_interfaces, access_controls]
           | selectattr('failed', 'defined') | selectattr('failed') | list | length == 0
         fail_msg: Mindestens eine Konfigurationsanforderung ist nicht erfüllt; siehe Einzelprüfungen oben.

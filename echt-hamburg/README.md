@@ -15,12 +15,41 @@ werden nicht vergeben.
 | --- | --- | --- | --- | --- |
 | 10 | Customer Support | 192.168.10.0/24 | 192.168.10.1 | 192.168.10.2–192.168.10.254 |
 | 20 | IT | 192.168.20.0/24 | 192.168.20.1 | 192.168.20.2–192.168.20.254 |
-| 30 | Webserver | 192.168.30.0/24 | 192.168.30.1 | 192.168.30.2–192.168.30.254 |
+| 30 | Webserver | 192.168.30.0/24 | 192.168.30.1 | .2 fest per DHCP reserviert; .3–.254 dynamisch |
 | 99 | Management | 192.168.99.0/24 | 192.168.99.1 | 192.168.99.3–192.168.99.254 |
 
 Der Switch erhält `192.168.99.2/24` auf `Vlan99`; diese Adresse und alle
 Gateways sind von DHCP ausgeschlossen. Der Router verwendet `200.108.1.1/28`
 am Internet-Uplink. Der Lab-Knoten `internet` hat `200.108.1.2/28`.
+
+Der Webserver erhält über die feste DHCP-Client-ID in `group_vars.yml` immer
+`192.168.30.2`. `request-dhcp.sh` sendet diese als DHCP-Option 61; die manuelle
+IOS-Bindung reserviert die Adresse auch gegenüber den dynamischen Clients.
+TCP-Port 80 und 443 von `200.108.1.1` werden auf diesen Webserver weitergeleitet.
+Die HTTP-/HTTPS-Verwaltungsdienste des Routers sind dafür deaktiviert, damit
+sie diese Ports nicht selbst belegen.
+nginx liefert HTTP; Port 443 ist für HTTPS vorbereitet, ein TLS-Zertifikat und
+HTTPS-Dienst sind damit noch nicht eingerichtet.
+
+Die Ergänzungen aus `hw` sind an die Lab-Ports und den Lab-Adressplan angepasst:
+`INTER-VLAN-WEB` sperrt neue HTTP-/HTTPS-Verbindungen mit Ziel VLAN 10, 20 oder
+99 und erlaubt sie zu VLAN 30. TCP-Antworten bestehender Verbindungen bleiben
+erlaubt. Gleiches VLAN durchläuft den Router und dessen ACL nicht.
+`WAN-IN` erlaubt TCP-Antworten, DNS-Antworten über UDP, HTTP/HTTPS und ICMP;
+sonstiger eingehender IP-Verkehr wird verworfen.
+
+Router-SSH ist aus VLAN99 und vom separaten Ansible-Host `172.20.20.1` erlaubt.
+`vrf-also` erhält den Zugang über die Containerlab-Management-VRF. Der IOL-Switch
+behält IP-Routing für seinen Bootstrap-Port; `no ip routing` aus `hw` würde
+diesen Zugang unterbrechen. Die Port-Security-Zeilen am Support-Port bleiben
+wie in `hw` auskommentierte Beispiele. Das Lab hat eigene Ports für alle vier
+VLANs und benötigt daher keinen umschaltbaren Hardware-Testport.
+
+DHCP verteilt `1.1.1.1` und `8.8.8.8` statt der Schul-DNS-Adressen aus `hw`.
+Das DHCP-Skript übernimmt die empfangenen Resolver und die Suchdomäne in die
+Docker-eigene `resolv.conf`, ohne die eingebundene Datei umzubenennen.
+Der simulierte Internet-Knoten stellt keine Weiterleitung ins echte Internet
+bereit; die Erreichbarkeit dieser Resolver ist somit kein bestandener Lab-Nachweis.
 
 Der gemeinsame Adressplan steht in `playbooks/group_vars.yml`. Vorlagen und
 Tests lesen daraus. `scripts/validate-settings.py` prüft unabhängig davon die
@@ -62,6 +91,15 @@ Ansible als Bootstrap-Zugang. Sie bleiben bei erneutem Deployment gleich.
 Die Funktionsprüfungen melden sich dagegen vom Management-Client über VLAN99
 an `192.168.99.1` und `192.168.99.2` an.
 
+Die Geräteübersicht aus `hw` steht ebenfalls zur Verfügung:
+
+```bash
+ansible-playbook -i clab-echt-hamburg/ansible-inventory.yml playbooks/inspect.yml
+```
+
+Das lesende Playbook speichert Modelle, IOS-Versionen und Schnittstellen unter
+`reports/`, ohne die laufende Konfiguration zu exportieren.
+
 Die Lernfeld-Vorgabe verlangt Klartext-Passwörter. Ansible ersetzt deshalb den
 von Containerlab erzeugten `admin`-Secret-Eintrag durch ein Passwort und entfernt
 ein bestehendes Enable-Secret. Die Lab-Zugänge bleiben `admin` / `admin` und
@@ -84,7 +122,7 @@ konfigurierten aktuellen Lab ist ebenfalls möglich.
 ./scripts/run-tests.sh
 ```
 
-Der Aufruf führt alle sechs Prüfungen aus, auch wenn eine davon fehlschlägt.
+Der Aufruf führt alle sieben Prüfungen aus, auch wenn eine davon fehlschlägt.
 Er zeigt die Ausgabe im Terminal und schreibt sie nach
 `logs/testlauf-YYYYMMDD-HHMMSS/`:
 
@@ -98,12 +136,17 @@ Containerlab-Dateien werden nicht versioniert.
 
 | Skript | Geprüfte Anforderungen |
 | --- | --- |
-| `request-dhcp.sh` | DHCP in allen vier VLANs, Hostadresse, `/24`-Maske und Gateway; richtet auch die Client-Routen ein |
-| `test-configuration.sh` | Adressplan, Hostnamen, Domäne, SSHv2, MOTD, Klartext-Passwörter, VLANs, Access-Ports, Trunk, ungenutzte Ports, DHCP-Pools, Gateways und NAT-Konfiguration |
+| `request-dhcp.sh` | DHCP in allen vier VLANs, Hostadresse, `/24`-Maske, Gateway, DNS-Optionen und Webserver-Reservierung; richtet auch die Client-Routen ein |
+| `test-configuration.sh` | Adressplan, Hostnamen, Domäne, SSHv2, MOTD, Klartext-Passwörter, VLANs, Access-Ports, Trunk, ungenutzte Ports, DHCP inklusive DNS und Webserver-Reservierung, Gateways, NAT und ACL-Zuordnung |
 | `test-routing.sh` | Vier Gateway-Pings und alle zwölf gerichteten Verbindungen zwischen den VLAN-Clients |
 | `test-management.sh` | SSH-Anmeldung mit Administratorrechten an Router und Switch über VLAN99 |
 | `test-nat.sh` | Simuliertes Internet aus allen VLANs und passende NAT/PAT-Übersetzungen auf `200.108.1.1` |
-| `test-webserver.sh` | HTTP aus Support, IT und Management sowie lokal; ausgelieferter Filialname, Gruppenname und alle Mitglieder |
+| `test-webserver.sh` | HTTP aus Support, IT und Management sowie lokal und vom Internet-Knoten über Portweiterleitung; ausgelieferter Filialname, Gruppenname und alle Mitglieder |
+| `test-access.sh` | Router-SSH nur aus Management, HTTP-/HTTPS-Sperren zu VLAN 10/20/99, TCP 443 zu VLAN 30 einschließlich WAN-Portweiterleitung, WAN-Sperre für andere Ports; mit laufenden Testdiensten als Positivkontrolle |
+
+`test-access.sh` startet temporäre TCP-Echo-Dienste und fügt für den WAN-Negativtest
+eine temporäre Hostroute hinzu. Beides wird beim Beenden wieder entfernt.
+Die Port-443-Prüfung weist TCP-Erreichbarkeit nach, keinen TLS-Handshake.
 
 Einzeln lassen sich die Skripte mit `./scripts/<name>.sh` starten.
 `test-common.sh` enthält gemeinsame Hilfsfunktionen und ist kein eigener Test.

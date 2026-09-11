@@ -10,8 +10,10 @@ ip ssh version 2
 banner motd ^C
 *** {{ franchise_name }} | {{ group_name }} ***
 Unbefugter Zugriff ist verboten.
+Gott Strafe Cisco
 ^C
 !
+! IOL benötigt IP-Routing für den separaten gerouteten Docker-Bootstrap-Port.
 vtp mode transparent
 !
 {% for vlan in vlans %}
@@ -22,6 +24,7 @@ vlan {{ vlan.id }}
 interface {{ switch_trunk_port }}
  description 802.1Q-Trunk-zu-R1
  switchport trunk encapsulation dot1q
+ switchport trunk native vlan 1
  switchport trunk allowed vlan {{ vlans | map(attribute='id') | join(',') }}
  switchport mode trunk
  no shutdown
@@ -32,6 +35,13 @@ interface {{ vlan.switch_port }}
  switchport access vlan {{ vlan.id }}
  switchport mode access
  spanning-tree portfast
+{% if vlan.id == 10 %}
+ ! Optionale Port-Security wie in hw; erst mit echter Client-MAC aktivieren.
+ !switchport port-security
+ !switchport port-security maximum 1
+ !switchport port-security mac-address sticky
+ !switchport port-security violation shutdown
+{% endif %}
  no shutdown
 !
 {% endfor %}

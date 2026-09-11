@@ -29,6 +29,11 @@ interface {{ switch_customer }}
  switchport mode access
  switchport access vlan 10
  spanning-tree portfast
+!
+ !switchport port-security
+ !switchport port-security maximum 1
+ !switchport port-security mac-address aaaa.aabb.bbbb
+ !switchport port-security violation shutdown
  no shutdown
 !
 interface {{ switch_test }}
