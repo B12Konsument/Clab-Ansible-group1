@@ -149,3 +149,23 @@ Mit Clients in VLAN 10 und 20 zusätzlich gegenseitige Pings testen;
 lokale Host-Firewalls berücksichtigen. Anschließend VLAN 30 testen.
 
 Herstellerreferenz: [Cisco 880 Datenblatt](https://www.cisco.com/c/en/us/products/collateral/routers/887-integrated-services-router-isr/data_sheet_c78_459542.html).
+---
+all:
+  vars:
+    ansible_connection: ansible.netcommon.network_cli
+    ansible_network_os: cisco.ios.ios
+    ansible_user: admin
+    ansible_password: admin
+
+    ansible_become: true
+    ansible_become_method: enable
+    ansible_become_password: enadmin
+  children:
+    routers:
+      hosts:
+        r1:
+          ansible_host: 192.168.99.1
+    switches:
+      hosts:
+        s1:
+          ansible_host: 192.168.99.33
